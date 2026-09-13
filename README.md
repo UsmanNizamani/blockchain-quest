@@ -7,7 +7,7 @@ An interactive 7-level web game that teaches blockchain fundamentals — hashing
 ## 🎮 Play It
 
 ### Option 1 — Online (fastest)
-👉 **https://YOURNAME.github.io/blockchain-quest/**
+👉 **https://UsmanNizamani.github.io/blockchain-quest/**
 
 ### Option 2 — Locally (one-time 30-second setup)
 
@@ -18,7 +18,7 @@ Download the LTS version from [https://nodejs.org](https://nodejs.org) and insta
 Click the green **Code** button above → **Download ZIP** → extract the folder.  
 Or if you use git:
 ```bash
-git clone https://github.com/YOURNAME/blockchain-quest.git
+git clone https://github.com/UsmanNizamani/blockchain-quest.git
 cd blockchain-quest
 ```
 

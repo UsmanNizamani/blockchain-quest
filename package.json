@@ -18,7 +18,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOURNAME/blockchain-quest.git"
+    "url": "https://github.com/UsmanNizamani/blockchain-quest.git"
   },
   "engines": {
     "node": ">=16"
