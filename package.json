@@ -1,0 +1,26 @@
+{
+  "name": "blockchain-quest",
+  "version": "1.0.0",
+  "description": "An interactive 7-level web game teaching blockchain fundamentals — hashing, PoW, PoS, P2P, attacks, Merkle trees.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "blockchain",
+    "education",
+    "game",
+    "web"
+  ],
+  "author": "Usman",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOURNAME/blockchain-quest.git"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

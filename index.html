@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blockchain Quest — Master Blockchain Through Play</title>
+  <meta name="description" content="An interactive web-based game teaching every major blockchain concept through visual gameplay, cryptographic simulations, and hands-on labs.">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/canvas.css">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-mark">
+          <svg viewBox="0 0 32 32" class="logo-icon" fill="none" stroke="currentColor">
+            <polygon points="16,3 29,10 29,22 16,29 3,22 3,10" stroke-width="2" stroke-linejoin="round" />
+            <line x1="16" y1="3" x2="16" y2="29" stroke-width="2" />
+            <line x1="3" y1="10" x2="29" y2="22" stroke-width="1.5" stroke-dasharray="2 2" />
+            <line x1="29" y1="10" x2="3" y2="22" stroke-width="1.5" stroke-dasharray="2 2" />
+          </svg>
+          <div class="logo-text">
+            <span class="logo-title">BLOCKCHAIN <span class="accent-text">QUEST</span></span>
+            <span class="logo-subtitle">Interactive Learning Protocol</span>
+          </div>
+        </div>
+
+        <div class="chapter-badge-selector">
+          <button id="btn-open-level-map" class="hud-btn primary" style="padding: 4px 10px; font-size: 11px; display: flex; align-items: center; gap: 6px; cursor: pointer;" title="Open Main Menu & Level Map">
+            <span>🗺️</span> <span id="header-level-text">LEVEL 01 / 07</span>
+          </button>
+          <select id="chapter-select" class="chapter-dropdown" style="display: none;">
+            <option value="1">Level 1: Hash Chain Guardian</option>
+            <option value="2">Level 2: Miner</option>
+            <option value="3">Level 3: Wallet Owner</option>
+            <option value="4">Level 4: Node Operator</option>
+            <option value="5">Level 5: Defender</option>
+            <option value="6">Level 6: DeFi Trader</option>
+            <option value="7">Level 7: Merkle Trees & State Proofs</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <div class="global-progress">
+          <span class="progress-label">EXPLORER PROGRESS</span>
+          <div class="progress-track">
+            <div id="global-progress-bar" class="progress-fill" style="width: 14%;"></div>
+          </div>
+          <span id="global-progress-text" class="progress-percent">1/7</span>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="player-stats">
+          <div class="stat-item" title="Knowledge Points">
+            <span class="stat-icon">⚡</span>
+            <span id="player-xp" class="stat-value">100 KP</span>
+          </div>
+        </div>
+        <button id="btn-open-codex" class="hud-btn" style="background: rgba(0, 240, 255, 0.12); border-color: var(--accent-cyan); color: var(--accent-cyan); font-size: 11px; padding: 4px 9px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer;" title="Open Concept Codex">
+          <span>📖</span> <span>Codex (<span id="hud-codex-count">5/24</span>)</span>
+        </button>
+        <button id="btn-open-certificate" class="hud-btn" style="background: rgba(255, 215, 0, 0.15); border-color: #ffd700; color: #ffd700; font-size: 11px; padding: 4px 9px; border-radius: 4px; display: flex; align-items: center; gap: 5px; cursor: pointer;" title="View Master Certificate">
+          <span>🎓</span> <span>Certificate</span>
+        </button>
+        <button id="btn-audio-toggle" class="icon-button" title="Toggle Sound FX" aria-label="Toggle Sound FX">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+        <button id="btn-reset-sim" class="icon-button" title="Reset Chapter State" aria-label="Reset Chapter State">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN GAME WORKSPACE -->
+    <main class="game-main">
+      <!-- 1. INTERACTIVE CANVAS VIEWPORT -->
+      <section class="canvas-viewport" id="viewport-container" aria-label="Game World Simulation">
+        <!-- Floating Canvas HUD Overlays -->
+        <div class="canvas-hud top-hud">
+          <div class="hud-pill">
+            <span class="hud-dot pulsing"></span>
+            <span id="hud-sim-mode">SIMULATION: LIVE</span>
+          </div>
+
+          <!-- Chain Integrity Health Bar -->
+          <div class="hud-pill hud-integrity-pill" id="hud-integrity-pill" title="Chain Cryptographic Integrity">
+            <span>CHAIN INTEGRITY:</span>
+            <div class="hud-health-track">
+              <div id="hud-integrity-fill" class="hud-health-fill" style="width: 100%;"></div>
+            </div>
+            <strong id="hud-integrity-text" style="color: var(--accent-green);">100%</strong>
+          </div>
+
+          <div class="hud-pill" id="hud-block-count">
+            <span>BLOCK HEIGHT: </span><strong id="hud-block-height">#3</strong>
+          </div>
+
+          <!-- Mining Target & Hashrate Pill -->
+          <div class="hud-pill" id="hud-mining-pill" title="Proof of Work Target & Speed">
+            <span class="hud-dot pulsing" style="background: var(--accent-amber); box-shadow: 0 0 8px var(--accent-amber);"></span>
+            <span>TARGET: </span><strong id="hud-mining-target" style="color: var(--accent-amber);">000</strong>
+            <span id="hud-mining-hashrate" style="color: var(--accent-cyan); margin-left: 4px; font-weight: bold;">IDLE</span>
+          </div>
+
+          <div class="hud-pill" id="hud-fps-pill">
+            <span id="hud-fps">60 FPS</span>
+          </div>
+        </div>
+
+        <div class="canvas-hud bottom-controls">
+          <div class="control-group">
+            <button id="btn-zoom-in" class="hud-btn" title="Zoom In" aria-label="Zoom In">+</button>
+            <button id="btn-zoom-out" class="hud-btn" title="Zoom Out" aria-label="Zoom Out">-</button>
+            <button id="btn-zoom-reset" class="hud-btn" title="Reset Camera">Reset View</button>
+          </div>
+          <div class="control-group">
+            <button id="btn-toggle-play" class="hud-btn primary" title="Pause/Play Simulation">
+              <span id="play-icon">⏸ Pause</span>
+            </button>
+            <button id="btn-inspect-chain" class="hud-btn" title="Open Ledger Inspector">
+              🔍 Inspect Ledger
+            </button>
+          </div>
+        </div>
+
+        <!-- Notification Banner inside Canvas -->
+        <div id="canvas-overlay-banner" class="canvas-overlay-banner hidden">
+          <div class="banner-content">
+            <span class="banner-badge" id="canvas-banner-badge">CHAPTER 02</span>
+            <h2 class="banner-title" id="canvas-banner-title">The Genesis & The Chain</h2>
+            <p class="banner-desc" id="canvas-banner-desc">Click any block to tamper with transactions and watch the chain detection system react!</p>
+          </div>
+        </div>
+
+        <!-- The Primary Game Canvas -->
+        <canvas id="game-canvas"></canvas>
+      </section>
+
+      <!-- 2. DYNAMIC EDUCATIONAL SIDEBAR -->
+      <aside class="educational-sidebar" id="sidebar-panel" aria-label="Educational Protocol and Missions">
+        <!-- Sidebar Navigation Tabs -->
+        <nav class="sidebar-tabs" role="tablist">
+          <button class="tab-btn active" data-tab="tab-theory" role="tab" aria-selected="true" id="btn-tab-theory">
+            <span class="tab-icon">📘</span> Theory
+          </button>
+          <button class="tab-btn" data-tab="tab-objectives" role="tab" aria-selected="false" id="btn-tab-objectives">
+            <span class="tab-icon">🎯</span> Objectives
+            <span id="obj-pending-count" class="badge-count">4</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-lab" role="tab" aria-selected="false" id="btn-tab-lab">
+            <span class="tab-icon">🧪</span> Lab Tool
+          </button>
+          <button class="tab-btn" data-tab="tab-why" role="tab" aria-selected="false" id="btn-tab-why">
+            <span class="tab-icon">💡</span> Why It Matters
+          </button>
+        </nav>
+
+        <!-- Sidebar Content Panels -->
+        <div class="sidebar-content">
+          <!-- Tab 1: Theory & Concepts -->
+          <section id="tab-theory" class="tab-pane active" role="tabpanel" aria-labelledby="btn-tab-theory">
+            <div id="theory-container" class="theory-scrollable">
+              <!-- Loaded dynamically based on chapter -->
+            </div>
+          </section>
+
+          <!-- Tab 2: Mission Objectives -->
+          <section id="tab-objectives" class="tab-pane" role="tabpanel" aria-labelledby="btn-tab-objectives">
+            <div class="objectives-header">
+              <h3 id="mission-title">Mission Objectives</h3>
+              <p class="mission-subtitle">Complete all objectives below to advance.</p>
+            </div>
+            <div id="objectives-list" class="objectives-list">
+              <!-- Objectives checklist rendered dynamically -->
+            </div>
+            <div class="hint-box" id="mission-hint-box">
+              <span class="hint-icon">💡</span>
+              <div class="hint-text" id="mission-hint-text">
+                Click any block card directly on the canvas to open the Tamper Console.
+              </div>
+            </div>
+          </section>
+
+          <!-- Tab 3: Interactive Lab Tool -->
+          <section id="tab-lab" class="tab-pane" role="tabpanel" aria-labelledby="btn-tab-lab">
+            <div class="lab-header">
+              <span class="lab-pill">INTERACTIVE LAB</span>
+              <h3 id="lab-tool-title">Chain Guardian Controls</h3>
+            </div>
+            <div id="lab-widget-container" class="lab-widget-container">
+              <!-- Rendered dynamically -->
+            </div>
+          </section>
+
+          <!-- Tab 4: Why This Matters (Real-World Implications) -->
+          <section id="tab-why" class="tab-pane" role="tabpanel" aria-labelledby="btn-tab-why">
+            <div id="why-container" class="theory-scrollable">
+              <!-- Loaded dynamically -->
+            </div>
+          </section>
+        </div>
+
+        <!-- Sidebar Footer Action Panel -->
+        <footer class="sidebar-footer">
+          <button id="btn-verify-objectives" class="action-btn primary-action">
+            <span class="btn-text">Verify Objectives</span>
+            <span class="btn-subtext">Check solution requirements</span>
+          </button>
+          <button id="btn-next-chapter" class="action-btn next-action" disabled>
+            <span class="btn-text">Proceed to Next Chapter →</span>
+            <span class="btn-subtext">Complete objectives first</span>
+          </button>
+        </footer>
+      </aside>
+    </main>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+    <!-- BLOCK TAMPER / EDIT MODAL -->
+    <div id="block-tamper-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="tamper-modal-title">
+      <div class="modal-card">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" id="tamper-modal-badge">BLOCK #1</span>
+            <h2 id="tamper-modal-title">Block Data & Tamper Console</h2>
+          </div>
+          <button id="btn-close-tamper-modal" class="close-btn" aria-label="Close">&times;</button>
+        </header>
+        <div class="modal-body">
+          <form id="form-tamper-block" style="display: flex; flex-direction: column; gap: 14px;">
+            <input type="hidden" id="tamper-block-index" value="1" />
+            
+            <div class="lab-field-group">
+              <label class="lab-field-label" for="tamper-data-input">
+                <span>Transaction Payload (Data)</span>
+                <span class="badge-label">Editable Payload</span>
+              </label>
+              <input type="text" id="tamper-data-input" class="lab-input" placeholder="e.g. Alice -> Bob: 12.5 BTC" required />
+            </div>
+
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="hud-btn" id="btn-preset-doublespend">⚔️ Preset: Double Spend 50 BTC</button>
+              <button type="button" class="hud-btn" id="btn-preset-hacker">⚔️ Preset: Steal to Hacker</button>
+              <button type="button" class="hud-btn" id="btn-preset-restore">✓ Restore Original</button>
+            </div>
+
+            <div class="hash-output-box">
+              <div class="hash-label-row">
+                <span style="font-size: 11px; color: #94a3b8;">PREVIOUS BLOCK HASH (prevHash)</span>
+              </div>
+              <div id="tamper-prev-hash" class="hash-hex-display" style="font-size: 10px; color: #94a3b8; border-color: #64748b;"></div>
+            </div>
+
+            <div class="hash-output-box">
+              <div class="hash-label-row">
+                <span style="font-size: 11px; color: #fff; font-weight: 700;">CURRENT BLOCK HASH</span>
+                <span id="tamper-hash-status" class="hash-status">Valid Proof</span>
+              </div>
+              <div id="tamper-curr-hash" class="hash-hex-display"></div>
+            </div>
+
+            <div id="tamper-chain-validity-banner" style="font-size: 12px; font-weight: bold; padding: 8px 12px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle);">
+              <span>CHAIN VALIDATION STATUS:</span>
+              <span id="tamper-chain-validity-text" style="color: var(--accent-green); font-family: var(--font-mono);">Chain Valid: ✅</span>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px;">
+              <button type="button" class="hud-btn" id="btn-cancel-tamper">Cancel</button>
+              <button type="submit" class="action-btn primary-action" style="padding: 10px 20px; width: auto;">
+                <span class="btn-text">Recalculate Hash & Tamper Block ⚠️</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDUCATIONAL TAMPER-EVIDENCE POPUP -->
+    <div id="tamper-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="evidence-modal-title">
+      <div class="modal-card" style="max-width: 580px; border-color: var(--accent-red); box-shadow: 0 0 35px rgba(255, 51, 102, 0.45);">
+        <header class="modal-header" style="background: rgba(255, 51, 102, 0.12); border-bottom-color: rgba(255, 51, 102, 0.3);">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: var(--accent-red); color: #fff;">⚠️ TAMPER DETECTED</span>
+            <h2 id="evidence-modal-title" style="color: #ff3366;">Chain Integrity Breached!</h2>
+          </div>
+          <button id="btn-close-evidence-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Required Educational Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-red); background: rgba(255, 51, 102, 0.1); font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "Changing one block changes its hash, which breaks the link to the next block. This is tamper-evidence."
+          </div>
+
+          <p style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            Because every subsequent block cryptographically cements the previous block's hash inside its own header, modifying data in <strong>Block #<span id="evidence-block-num">1</span></strong> altered its 256-bit digest.
+          </p>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 51, 102, 0.3); padding: 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 6px;">
+            <div><span style="color: #ff3366; font-weight: bold;">Block #<span id="evidence-curr-id">1</span> New Hash:</span> <div id="evidence-new-hash" style="color: #ff3366; word-break: break-all; margin-top: 2px;"></div></div>
+            <div style="margin-top: 4px;"><span style="color: var(--accent-amber); font-weight: bold;">Block #<span id="evidence-next-id">2</span> Recorded prevHash:</span> <div id="evidence-exp-hash" style="color: var(--accent-amber); word-break: break-all; margin-top: 2px;"></div></div>
+            <div style="color: var(--accent-red); font-weight: bold; margin-top: 4px; border-top: 1px dashed rgba(255, 51, 102, 0.4); padding-top: 6px;">
+              ⚡ MISMATCH DETECTED ➔ Cryptographic Chain Broken!
+            </div>
+          </div>
+
+          <p style="font-size: 12px; color: var(--text-muted);">
+            To forge this alteration convincingly, an attacker would need to recalculate Proof-of-Work nonces for every subsequent block faster than the entire honest network combined.
+          </p>
+
+          <button id="btn-ack-evidence" class="action-btn primary-action" style="margin-top: 4px;">
+            <span class="btn-text">Understood, Chain Guardian! 🛡️</span>
+            <span class="btn-subtext">Return to inspect the broken links</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDUCATIONAL PROOF-OF-WORK POPUP -->
+    <div id="pow-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pow-modal-title">
+      <div class="modal-card" style="max-width: 650px; border-color: var(--accent-amber); box-shadow: 0 0 35px rgba(255, 183, 3, 0.45);">
+        <header class="modal-header" style="background: rgba(255, 183, 3, 0.12); border-bottom-color: rgba(255, 183, 3, 0.3);">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: var(--accent-amber); color: #000;">⛏️ BLOCK MINED</span>
+            <h2 id="pow-modal-title" style="color: var(--accent-amber);">Proof of Work Solved & Verified!</h2>
+          </div>
+          <button id="btn-close-pow-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px; max-height: 75vh; overflow-y: auto;">
+          <!-- Required Core Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-amber); background: rgba(255, 183, 3, 0.1); font-size: 13px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "Proof of Work forces miners to spend computational energy. It's hard to find the nonce but easy to verify it."
+          </div>
+
+          <p style="font-size: 12px; line-height: 1.5; color: var(--text-secondary);">
+            Your mining rig evaluated random cryptographic nonces until discovering a hash that satisfies the network's target difficulty for <strong>Block #<span id="pow-modal-block-num">2</span></strong>!
+          </p>
+
+          <!-- Mining Telemetry Metrics Grid -->
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 183, 3, 0.3); padding: 12px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <span style="color: #94a3b8;">Target Difficulty:</span><br>
+              <strong id="pow-modal-diff-target" style="color: var(--accent-amber);">00</strong>
+            </div>
+            <div>
+              <span style="color: #94a3b8;">Winning Nonce:</span><br>
+              <strong id="pow-modal-nonce" style="color: #fff;">0</strong>
+            </div>
+            <div>
+              <span style="color: #94a3b8;">Hashrate Speed:</span><br>
+              <strong id="pow-modal-hashrate" style="color: var(--accent-cyan);">0 H/s</strong>
+            </div>
+            <div>
+              <span style="color: #94a3b8;">Total Attempts:</span><br>
+              <strong id="pow-modal-attempts" style="color: var(--accent-amber);">0 nonces</strong>
+            </div>
+            <div>
+              <span style="color: #94a3b8;">Energy Burned:</span><br>
+              <strong id="pow-modal-energy" style="color: var(--accent-green);">0.00 J (0.0000 Wh)</strong>
+            </div>
+            <div>
+              <span style="color: #94a3b8;">Coinbase Block Reward:</span><br>
+              <strong id="pow-modal-reward" style="color: var(--accent-green);">+50.0 QUEST</strong>
+            </div>
+            <div style="grid-column: span 2; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+              <span style="color: #94a3b8;">Winning SHA-256 Digest:</span>
+              <div id="pow-modal-hash" style="color: var(--accent-green); word-break: break-all; margin-top: 2px; font-size: 10px;"></div>
+            </div>
+          </div>
+
+          <!-- 5 Required Educational Callouts -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- 1. Hashrate & Nonces -->
+            <div class="theory-card" style="margin-bottom: 0; padding: 8px 10px; background: rgba(0, 240, 255, 0.05); border-left: 3px solid var(--accent-cyan);">
+              <strong style="color: var(--accent-cyan); font-size: 11px;">1. Hashrate & Nonce Search</strong>
+              <p style="font-size: 10.5px; color: #cbd5e1; line-height: 1.4; margin-top: 2px;">
+                Hashrate measures how many random 32-bit nonces your machine tests per second. Because SHA-256 is pseudo-random, miners cannot reverse-engineer or mathematically predict the output—the only way to find a winning hash is sheer brute force guessing.
+              </p>
+            </div>
+
+            <!-- 2. Difficulty Adjustment -->
+            <div class="theory-card" style="margin-bottom: 0; padding: 8px 10px; background: rgba(255, 183, 3, 0.05); border-left: 3px solid var(--accent-amber);">
+              <strong style="color: var(--accent-amber); font-size: 11px;">2. Dynamic Difficulty Adjustment</strong>
+              <p style="font-size: 10.5px; color: #cbd5e1; line-height: 1.4; margin-top: 2px;">
+                As more miners join the global network and total hashrate rises, blocks would be found too quickly. The blockchain algorithm automatically increases required leading zeros (e.g. Bitcoin adjusts every 2,016 blocks) so the average block cadence stays constant at 10 minutes.
+              </p>
+            </div>
+
+            <!-- 3. Energy Cost -->
+            <div class="theory-card" style="margin-bottom: 0; padding: 8px 10px; background: rgba(255, 51, 102, 0.05); border-left: 3px solid var(--accent-red);">
+              <strong style="color: var(--accent-red); font-size: 11px;">3. Thermodynamic Energy Cost</strong>
+              <p style="font-size: 10.5px; color: #cbd5e1; line-height: 1.4; margin-top: 2px;">
+                Proof of Work bridges digital software with physical reality. By requiring real electrical energy ($Joules$) to produce valid blocks, it creates a thermodynamic firewall: rewriting 1 month of Bitcoin history would require more electricity than entire industrialized nations consume in a year.
+              </p>
+            </div>
+
+            <!-- 4. Block Reward -->
+            <div class="theory-card" style="margin-bottom: 0; padding: 8px 10px; background: rgba(0, 255, 136, 0.05); border-left: 3px solid var(--accent-green);">
+              <strong style="color: var(--accent-green); font-size: 11px;">4. Economic Block Reward</strong>
+              <p style="font-size: 10.5px; color: #cbd5e1; line-height: 1.4; margin-top: 2px;">
+                To compensate miners for electricity and hardware depreciation, every valid block grants a newly minted coinbase subsidy (+50 QUEST / 3.125 BTC) plus transaction fees. This economic incentive ensures honest mining is always vastly more profitable than attacking the chain.
+              </p>
+            </div>
+
+            <!-- 5. Asymmetry: Hard to Find, Easy to Verify -->
+            <div class="hint-box" style="background: rgba(0, 255, 136, 0.06); border-color: rgba(0, 255, 136, 0.3); padding: 8px 10px;">
+              <span class="hint-icon">⚖️</span>
+              <div class="hint-text" style="color: var(--text-main); font-size: 11px;">
+                <strong>The Computational Asymmetry:</strong><br>
+                • <strong>To Find:</strong> Required <span id="pow-modal-cost-attempts" style="color: var(--accent-amber); font-weight: bold;">0</span> trial-and-error hashes ($O(16^D)$ work) burning electricity.<br>
+                • <strong>To Verify:</strong> Any peer node validates the block instantly in <strong>1 single calculation (&lt;0.01ms, O(1))</strong>!
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-ack-pow" class="action-btn primary-action" style="background: var(--accent-amber); color: #000; margin-top: 4px;">
+            <span class="btn-text">Lock Block Into Chain & Collect Reward ⛏️</span>
+            <span class="btn-subtext">Add block permanently to the distributed ledger</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- EDUCATIONAL DIGITAL SIGNATURE POPUP -->
+    <div id="signature-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="sig-modal-title">
+      <div class="modal-card" style="max-width: 580px; border-color: var(--accent-purple); box-shadow: 0 0 35px rgba(157, 78, 221, 0.45);">
+        <header class="modal-header" style="background: rgba(157, 78, 221, 0.12); border-bottom-color: rgba(157, 78, 221, 0.3);">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: var(--accent-purple); color: #fff;">🖋️ TRANSACTION SIGNED</span>
+            <h2 id="sig-modal-title" style="color: var(--accent-purple);">Cryptographic Signature Broadcast!</h2>
+          </div>
+          <button id="btn-close-sig-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Required Educational Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-purple); background: rgba(157, 78, 221, 0.1); font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "The private key proves ownership. Only you can create a valid signature. Anyone can verify it with your public key."
+          </div>
+
+          <p style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            Your wallet computed a digital signature using your confidential <strong>Private Key</strong>. The network can now verify your transfer without you ever exposing your secret key!
+          </p>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(157, 78, 221, 0.3); padding: 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Transfer Amount:</span>
+              <strong id="sig-modal-amount" style="color: var(--accent-cyan);">0.00 QUEST</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Recipient:</span>
+              <strong id="sig-modal-recipient" style="color: #fff;">NPC Merchant</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Replay Nonce:</span>
+              <strong id="sig-modal-nonce" style="color: var(--accent-amber);">#0</strong>
+            </div>
+            <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+              <span style="color: #94a3b8;">Digital Signature (SHA-256 Mock):</span>
+              <div id="sig-modal-signature" style="color: var(--accent-purple); word-break: break-all; margin-top: 2px;"></div>
+            </div>
+          </div>
+
+          <div class="hint-box" style="background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.3);">
+            <span class="hint-icon">🔐</span>
+            <div class="hint-text" style="color: var(--text-main);">
+              <strong>Mathematical Verification:</strong><br>
+              Any peer node confirms: <code>Verify(Transaction, PublicKey, Signature) === TRUE</code>.<br>
+              If an attacker changed the amount by even 0.01 QUEST, the signature would fail instantly.
+            </div>
+          </div>
+
+          <button id="btn-ack-sig" class="action-btn primary-action" style="background: var(--accent-purple); color: #fff; margin-top: 4px;">
+            <span class="btn-text">Understood, Transaction Authenticated! 🛡️</span>
+            <span class="btn-subtext">Return to wallet console</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSENSUS VERIFICATION EDUCATIONAL MODAL (CHAPTER 3) -->
+    <div id="consensus-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="consensus-modal-title">
+      <div class="modal-card" style="border-color: var(--accent-cyan); max-width: 540px;">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">DISTRIBUTED CONSENSUS</span>
+            <h2 id="consensus-modal-title" style="color: #fff;">Independent Node Network Verification</h2>
+          </div>
+          <button id="btn-close-consensus-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Required Educational Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-cyan); background: rgba(0, 240, 255, 0.1); font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "Every node verifies independently. An attacker can't fool the network because honest nodes outnumber malicious ones."
+          </div>
+
+          <p style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            The transaction was broadcast across 4 independent validator nodes. Rather than trusting a central server, each node evaluated the 4 core invariant checks: <strong>Signature Validity</strong>, <strong>Sufficient Balance</strong>, <strong>Sequence Nonce</strong>, and <strong>Double-Spend Prevention</strong>.
+          </p>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(0, 240, 255, 0.3); padding: 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Network Consensus Verdict:</span>
+              <strong id="consensus-modal-verdict" style="color: var(--accent-green);">APPROVED (4/4 NODES)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Scenario Evaluated:</span>
+              <strong id="consensus-modal-scenario" style="color: var(--accent-cyan);">Honest Valid Transfer</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Voting Tally:</span>
+              <span id="consensus-modal-tally" style="color: #fff;">4 Approved / 0 Rejected</span>
+            </div>
+            <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+              <span style="color: #94a3b8;">Byzantine Resilience:</span>
+              <div id="consensus-modal-desc" style="color: var(--accent-green); margin-top: 2px;">All honest nodes independently agreed on validity. Transaction admitted to mempool.</div>
+            </div>
+          </div>
+
+          <div class="hint-box" style="background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.3);">
+            <span class="hint-icon">🛡️</span>
+            <div class="hint-text" style="color: var(--text-main);">
+              <strong>Byzantine Fault Tolerance:</strong><br>
+              In a decentralized blockchain, no single node can censor or counterfeit transactions. If an attacker submits bad data, honest nodes reject it immediately without needing a central coordinator.
+            </div>
+          </div>
+
+          <button id="btn-ack-consensus" class="action-btn primary-action" style="background: var(--accent-cyan); color: #000; font-weight: bold; margin-top: 4px;">
+            <span class="btn-text">Understood, Consensus Enforced! ⚡</span>
+            <span class="btn-subtext">Return to P2P network simulator</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 51% ATTACK ECONOMIC DEFENSE MODAL (CHAPTER 4) -->
+    <div id="attack51-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="attack51-modal-title">
+      <div class="modal-card" style="border-color: var(--accent-red); max-width: 560px;">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 51, 102, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red);">CONSENSUS DEFENSE</span>
+            <h2 id="attack51-modal-title" style="color: #fff;">The Economic Invalidation of 51% Attacks</h2>
+          </div>
+          <button id="btn-close-51-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Required Educational Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-red); background: rgba(255, 51, 102, 0.1); font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "51% attacks are possible but economically irrational. The attacker would need to spend more on mining than they could steal, and it would destroy the currency's value."
+          </div>
+
+          <p style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            Because Nakamoto Consensus dictates that nodes follow the <em>longest valid chain with the most accumulated Proof of Work</em>, an entity commanding &gt;50% of the network's hashrate can theoretically out-mine the honest majority in secret and trigger a <strong>Chain Reorganization</strong>.
+          </p>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 51, 102, 0.3); padding: 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">1. Hashrate Capital Barrier:</span>
+              <strong style="color: #fff;">Millions of specialized ASICs</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">2. Ongoing Electricity Burn:</span>
+              <strong style="color: var(--accent-amber);">Hundreds of Megawatts ($/hr)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">3. Market Reaction:</span>
+              <strong style="color: var(--accent-red);">Instant Discovery & Price Collapse</strong>
+            </div>
+            <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+              <span style="color: #94a3b8;">The Nash Equilibrium:</span>
+              <div style="color: var(--accent-green); margin-top: 2px;">
+                An attacker with 60% hashrate earns vastly more wealth by simply mining honestly, securing the network, and collecting guaranteed block subsidies and fees!
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-box" style="background: rgba(255, 183, 3, 0.08); border-color: rgba(255, 183, 3, 0.3);">
+            <span class="hint-icon">💡</span>
+            <div class="hint-text" style="color: var(--text-main);">
+              <strong>Game Theory at Scale:</strong><br>
+              Proof of Work couples cryptographic consensus directly to physical thermodynamics and economics. The greater the network difficulty, the more impenetrable the economic moat.
+            </div>
+          </div>
+
+          <button id="btn-ack-51" class="action-btn primary-action" style="background: var(--accent-red); color: #fff; font-weight: bold; margin-top: 4px;">
+            <span class="btn-text">Understood, Economic Invariant Verified! 🛡️</span>
+            <span class="btn-subtext">Return to 51% attack simulator</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOUBLE-SPEND NONCE DEFENSE MODAL (CHAPTER 6) -->
+    <div id="doublespend-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="doublespend-modal-title">
+      <div class="modal-card" style="border-color: var(--accent-red); max-width: 540px;">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 51, 102, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red);">DOUBLE-SPEND DEFENSE</span>
+            <h2 id="doublespend-modal-title" style="color: #fff;">Nonce Collision Prevention</h2>
+          </div>
+          <button id="btn-close-doublespend-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Required Educational Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-red); background: rgba(255, 51, 102, 0.1); font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "The nonce prevents double-spending. Each transaction from an address must have a unique, sequential number."
+          </div>
+
+          <p style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            When you broadcasted the second transaction attempting to spend the same 10 coins to Merchant B, you reused <strong>Nonce #0</strong>. Validator nodes inspected the unconfirmed mempool, caught the collision, and rejected the transaction with <strong>"NONCE ALREADY USED"</strong>.
+          </p>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255, 51, 102, 0.3); padding: 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">First Transaction (Tx1):</span>
+              <strong style="color: var(--accent-green);">10.00 QUEST ➔ Merchant A [Nonce #0: PENDING]</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Second Transaction (Tx2):</span>
+              <strong style="color: var(--accent-red);">10.00 QUEST ➔ Merchant B [Nonce #0: COLLISION]</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">Network Verdict:</span>
+              <strong style="color: var(--accent-red); font-size: 12px;">REJECTED: "NONCE ALREADY USED"</strong>
+            </div>
+            <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+              <span style="color: #94a3b8;">Digital Scarcity Enforced:</span>
+              <div style="color: var(--accent-cyan); margin-top: 2px;">
+                Because digital data can be copied infinitely, the blockchain uses sequential account nonces to enforce total mathematical order and prevent any coin from being spent twice.
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-box" style="background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.3);">
+            <span class="hint-icon">🛡️</span>
+            <div class="hint-text" style="color: var(--text-main);">
+              <strong>Sequential Nonce Guarantee:</strong><br>
+              In order for a second transaction to be accepted, its nonce must be strictly <code>LastNonce + 1</code> (e.g. Nonce #1). But because your balance was exhausted by Tx1, even a new nonce would fail the balance check!
+            </div>
+          </div>
+
+          <button id="btn-ack-doublespend" class="action-btn primary-action" style="background: var(--accent-red); color: #fff; font-weight: bold; margin-top: 4px;">
+            <span class="btn-text">Understood, Scarcity Preserved! ⚡</span>
+            <span class="btn-subtext">Return to double-spend lab</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMART CONTRACT EDUCATIONAL MODAL (CHAPTER 7) -->
+    <div id="contract-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="contract-modal-title">
+      <div class="modal-card" style="border-color: var(--accent-purple); max-width: 540px;">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(157, 78, 221, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple);">SMART CONTRACT RUNTIME</span>
+            <h2 id="contract-modal-title" style="color: #fff;">Autonomous EVM Execution</h2>
+          </div>
+          <button id="btn-close-contract-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Required Educational Quote -->
+          <div class="theory-highlight" style="border-left-color: var(--accent-purple); background: rgba(157, 78, 221, 0.1); font-size: 14px; font-weight: 600; color: #fff; line-height: 1.5;">
+            "Smart contracts are self-executing code on the blockchain. They run exactly as written — no one can stop or alter them."
+          </div>
+
+          <p style="font-size: 13px; line-height: 1.6; color: var(--text-secondary);">
+            Unlike traditional software hosted on centralized servers, smart contracts reside directly on the decentralized ledger at a deterministic address: <code>0x + SHA-256(bytecode + deployer + nonce)</code>. Once compiled and deployed, their rules cannot be censored, changed, or halted by any third party.
+          </p>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(157, 78, 221, 0.3); padding: 14px; border-radius: 6px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">1. Deterministic Addressing:</span>
+              <strong style="color: var(--accent-cyan);">0x + SHA-256(Code + Deployer + Nonce)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">2. Cryptographic Calls:</span>
+              <strong style="color: var(--accent-green);">Signed Tx from Caller ➔ Node Verification</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #94a3b8;">3. Persistent State Storage:</span>
+              <strong style="color: var(--accent-amber);">Immutable On-Chain Key-Value Storage</strong>
+            </div>
+            <div style="border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 6px;">
+              <span style="color: #94a3b8;">Trustless Autonomy:</span>
+              <div style="color: var(--accent-purple); margin-top: 2px;">
+                Code is Law. Neither buyers, sellers, nor external authorities can bypass contract preconditions or alter stored state illegally.
+              </div>
+            </div>
+          </div>
+
+          <div class="hint-box" style="background: rgba(0, 240, 255, 0.06); border-color: rgba(0, 240, 255, 0.3);">
+            <span class="hint-icon">📜</span>
+            <div class="hint-text" style="color: var(--text-main);">
+              <strong>Turing-Complete Decentralization:</strong><br>
+              Whether locking escrow funds, tallying DAO governance ballots, or transferring custom fungible tokens, smart contracts turn the blockchain into a global decentralized computer.
+            </div>
+          </div>
+
+          <button id="btn-ack-contract" class="action-btn primary-action" style="background: var(--accent-purple); color: #fff; font-weight: bold; margin-top: 4px;">
+            <span class="btn-text">Understood, Autonomous Code Mastered! ⚡</span>
+            <span class="btn-subtext">Return to smart contract console</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEDGER INSPECTOR MODAL -->
+    <div id="inspector-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-card">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge">LEDGER STATE</span>
+            <h2 id="modal-title">Blockchain Data Inspector</h2>
+          </div>
+          <button id="btn-close-modal" class="close-btn" aria-label="Close Inspector">&times;</button>
+        </header>
+        <div class="modal-body" id="modal-content">
+          <!-- Populated dynamically with block hex/JSON -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. MAIN MENU / LEVEL SELECT MODAL -->
+    <div id="level-select-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="level-select-title">
+      <div class="modal-card" style="max-width: 820px; border-color: var(--accent-cyan);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan);">BLOCKCHAIN EXPLORER JOURNEY</span>
+            <h2 id="level-select-title" style="color: #fff;">Campaign Level Map</h2>
+          </div>
+          <button id="btn-close-level-select" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <p style="font-size: 12px; color: var(--text-secondary);">
+            Progress through each level to unlock new blockchain concepts, earn Knowledge Points, and complete your cryptographic journey.
+          </p>
+          <div id="level-select-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <!-- Populated dynamically with 6 level cards -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CONCEPT CODEX MODAL -->
+    <div id="concept-codex-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="codex-title">
+      <div class="modal-card" style="max-width: 820px; border-color: var(--accent-purple);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(157, 78, 221, 0.2); color: var(--accent-purple);">CRYPTOGRAPHIC ENCYCLOPEDIA</span>
+            <h2 id="codex-title" style="color: #fff;">📖 Concept Codex</h2>
+          </div>
+          <button id="btn-close-codex" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <input type="text" id="codex-search-input" class="tx-input" placeholder="🔍 Search concepts (e.g. SHA-256, PoW, Nonce, AMM)..." style="flex: 1; padding: 8px 12px; font-size: 12px;" />
+            <span id="codex-progress-text" style="font-size: 11px; color: var(--accent-cyan); font-family: var(--font-mono); font-weight: bold; white-space: nowrap;">
+              5 / 24 Discovered
+            </span>
+          </div>
+
+          <!-- Category filter pills -->
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <button class="codex-cat-pill hud-btn active" data-cat="ALL" style="font-size: 9.5px; padding: 3px 8px;">All</button>
+            <button class="codex-cat-pill hud-btn" data-cat="Cryptography" style="font-size: 9.5px; padding: 3px 8px;">Cryptography</button>
+            <button class="codex-cat-pill hud-btn" data-cat="Architecture" style="font-size: 9.5px; padding: 3px 8px;">Architecture</button>
+            <button class="codex-cat-pill hud-btn" data-cat="Consensus" style="font-size: 9.5px; padding: 3px 8px;">Consensus</button>
+            <button class="codex-cat-pill hud-btn" data-cat="Smart Contracts" style="font-size: 9.5px; padding: 3px 8px;">Smart Contracts</button>
+            <button class="codex-cat-pill hud-btn" data-cat="DeFi" style="font-size: 9.5px; padding: 3px 8px;">DeFi</button>
+          </div>
+
+          <div id="codex-entries-container" style="max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px;">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. LEVEL COMPLETION SUMMARY MODAL -->
+    <div id="level-summary-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="summary-title">
+      <div class="modal-card" style="max-width: 600px; border-color: var(--accent-green);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green);">LEVEL COMPLETED</span>
+            <h2 id="summary-title" style="color: #fff;">Level Mastered!</h2>
+          </div>
+          <button id="btn-close-level-summary" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Reward & Role Banner -->
+          <div style="background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 240, 255, 0.05)); border: 1px solid var(--accent-green); padding: 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Explorer Role Mastered</div>
+              <strong id="summary-role" style="font-size: 16px; color: #fff;">Chain Guardian</strong>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Knowledge Points</div>
+              <strong id="summary-kp" style="font-size: 20px; color: var(--accent-green); font-family: var(--font-mono);">+250 KP</strong>
+            </div>
+          </div>
+
+          <!-- What You Learned -->
+          <div>
+            <h4 style="font-size: 12px; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 6px;">💡 What You Learned</h4>
+            <p id="summary-desc" style="font-size: 12px; color: #cbd5e1; line-height: 1.5;"></p>
+          </div>
+
+          <!-- Concepts Mastered Checklist -->
+          <div>
+            <h4 style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Concepts Added to Codex</h4>
+            <div id="summary-concepts-list" style="display: flex; flex-direction: column; gap: 4px;"></div>
+          </div>
+
+          <!-- Real World Anchor -->
+          <div style="background: rgba(0,0,0,0.4); border-left: 3px solid var(--accent-amber); padding: 8px 12px; border-radius: 4px;">
+            <strong style="color: var(--accent-amber); font-size: 10.5px;">Real-World Anchor:</strong>
+            <p id="summary-anchor" style="font-size: 11px; color: #94a3b8; margin-top: 2px; line-height: 1.4;"></p>
+          </div>
+
+          <div id="summary-next-teaser" style="font-size: 11px; color: var(--accent-cyan); font-style: italic;"></div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+            <button id="btn-summary-quiz" class="action-btn" style="background: rgba(157, 78, 221, 0.2); border: 1px solid var(--accent-purple); color: #fff; font-weight: bold; justify-content: center;">
+              <span>📝 Take Quiz (+150 KP)</span>
+            </button>
+            <button id="btn-summary-continue" class="action-btn primary-action" style="background: var(--accent-green); color: #000; font-weight: bold; justify-content: center;">
+              <span>Continue to Next Level ➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 3-QUESTION LEVEL QUIZ MODAL -->
+    <div id="quiz-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="quiz-modal-title">
+      <div class="modal-card" style="max-width: 580px; border-color: var(--accent-purple);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" id="quiz-question-counter" style="background: rgba(157, 78, 221, 0.2); color: var(--accent-purple);">Question 1 of 3</span>
+            <h2 id="quiz-modal-title" style="color: #fff;">Level Knowledge Check</h2>
+          </div>
+          <button id="btn-close-quiz" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <div id="quiz-modal-subtitle" style="font-size: 11px; color: var(--text-muted);"></div>
+          
+          <div id="quiz-question-prompt" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.45; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; border: 1px solid var(--border-subtle);"></div>
+
+          <div id="quiz-options-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+
+          <div id="quiz-feedback-box" style="display: none; background: rgba(0,0,0,0.5); border: 1px solid var(--border-medium); padding: 10px; border-radius: 6px;">
+            <div id="quiz-feedback-text"></div>
+          </div>
+
+          <button id="btn-quiz-next" class="action-btn primary-action" style="display: none; width: 100%; justify-content: center; margin-top: 4px;">
+            Next Question ➔
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. "EXPLAIN THIS" MICRO-POPOVER MODAL -->
+    <div id="explain-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="explain-modal-title">
+      <div class="modal-card" style="max-width: 520px; border-color: var(--accent-cyan);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" id="explain-modal-concept" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan);">CONCEPT EXPLANATION</span>
+            <h2 id="explain-modal-title" style="color: #fff;">Under The Hood</h2>
+          </div>
+          <button id="btn-close-explain-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <div id="explain-modal-summary" style="font-size: 13px; font-weight: 600; color: var(--accent-cyan); line-height: 1.4;"></div>
+
+          <div id="explain-equation-container" style="background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--accent-amber); border: 1px dashed rgba(255, 183, 3, 0.3);">
+            <div id="explain-modal-equation"></div>
+          </div>
+
+          <div>
+            <h4 style="font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">How It Works in Blockchain:</h4>
+            <p id="explain-modal-deepdive" style="font-size: 11.5px; color: #cbd5e1; line-height: 1.5;"></p>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 4px; border-left: 2px solid var(--accent-green);">
+            <strong style="color: var(--accent-green); font-size: 10.5px;">Real-World System:</strong>
+            <p id="explain-modal-realworld" style="font-size: 11px; color: #94a3b8; margin-top: 2px;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. "DIFFICULTY RETARGETING" EDUCATIONAL POPUP MODAL -->
+    <div id="difficulty-retarget-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="retarget-modal-title">
+      <div class="modal-card" style="max-width: 580px; border-color: var(--accent-amber); background: radial-gradient(circle at top, #1e190b 0%, #0c0a04 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 183, 3, 0.2); color: var(--accent-amber); border: 1px solid var(--accent-amber);">AUTOMATIC DIFFICULTY RETARGETING</span>
+            <h2 id="retarget-modal-title" style="color: #ffb703;">⚖️ Difficulty Adjustment Triggered!</h2>
+          </div>
+          <button id="btn-close-retarget-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight -->
+          <div style="background: rgba(255, 183, 3, 0.1); border-left: 3px solid var(--accent-amber); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-amber); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Satoshi's Self-Stabilizing Law:</div>
+            <p id="retarget-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "Difficulty adjustment is Bitcoin's self-regulating mechanism. More miners → higher difficulty → same block time."
+            </p>
+          </div>
+
+          <!-- Live Metrics Grid -->
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-family: var(--font-mono); font-size: 11px;">
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); text-align: center;">
+              <span style="color: #94a3b8; font-size: 9.5px;">PREVIOUS TARGET</span><br>
+              <strong id="retarget-old-diff" style="color: #94a3b8; font-size: 15px;">D2 ('00')</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); text-align: center;">
+              <span style="color: #94a3b8; font-size: 9.5px;">ROLLING AVG TIME</span><br>
+              <strong id="retarget-avg-time" style="color: var(--accent-cyan); font-size: 15px;">2.40s</strong>
+              <div style="font-size: 8.5px; color: #64748b;">Target: 5.00s</div>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 183, 3, 0.3); text-align: center;">
+              <span style="color: var(--accent-amber); font-size: 9.5px;">NEW TARGET</span><br>
+              <strong id="retarget-new-diff" style="color: var(--accent-amber); font-size: 15px;">D3 ('000')</strong>
+            </div>
+          </div>
+
+          <!-- Retarget Reason / Dynamics -->
+          <div style="background: rgba(0,0,0,0.3); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span id="retarget-direction-icon" style="font-size: 16px;">📈</span>
+              <strong id="retarget-direction-title" style="color: #fff; font-size: 12px;">Difficulty Increased</strong>
+            </div>
+            <p id="retarget-modal-reason" style="font-size: 11.5px; color: #cbd5e1; line-height: 1.45; margin: 0;"></p>
+          </div>
+
+          <!-- Formula & Educational Breakdown -->
+          <div style="background: rgba(255,255,255,0.02); padding: 10px 12px; border-radius: 6px; font-size: 11px; color: #94a3b8; line-height: 1.5;">
+            <strong style="color: var(--accent-cyan); font-size: 11px;">Why This Matters in Bitcoin:</strong>
+            <p style="margin: 4px 0 0 0;">
+              Every 2,016 blocks (~2 weeks), Bitcoin checks if blocks took more or less than 20,160 minutes ($2,016 \times 10\text{ min}$). Without this mechanism, faster hardware or joining miners would hyper-inflate the coin supply. Conversely, if 50% of miners quit, blocks would freeze forever without downward adjustment.
+            </p>
+          </div>
+
+          <button id="btn-ack-retarget" class="action-btn primary-action" style="background: var(--accent-amber); color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Continue Mining ⛏️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. "PROOF OF STAKE & SLASHING" EDUCATIONAL POPUP MODAL -->
+    <div id="pos-evidence-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pos-modal-title">
+      <div class="modal-card" style="max-width: 600px; border-color: var(--accent-red); background: radial-gradient(circle at top, #260f14 0%, #0c0406 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 51, 102, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red);">PROOF OF STAKE & SLASHING</span>
+            <h2 id="pos-modal-title" style="color: #ff3366;">⚔️ Slashing Protocol Triggered!</h2>
+          </div>
+          <button id="btn-close-pos-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight -->
+          <div style="background: rgba(255, 51, 102, 0.12); border-left: 3px solid var(--accent-red); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-red); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Proof of Stake Security Invariant:</div>
+            <p id="pos-quote" style="font-size: 13px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "Slashing is what makes PoS secure. Attacking the network is expensive — you risk your own capital, not just wasted electricity."
+            </p>
+          </div>
+
+          <!-- Live Metrics Grid -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-family: var(--font-mono); font-size: 10px;">
+            <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.06); text-align: center;">
+              <span style="color: #94a3b8; font-size: 8.5px;">ROGUE VALIDATOR</span><br>
+              <strong id="pos-modal-validator" style="color: #fff; font-size: 11.5px;">👾 Rogue Node</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(255, 51, 102, 0.3); text-align: center;">
+              <span style="color: var(--accent-red); font-size: 8.5px;">CAPITAL BURNED</span><br>
+              <strong id="pos-modal-burned" style="color: var(--accent-red); font-size: 12.5px;">-16.0 QUEST</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(255, 183, 3, 0.25); text-align: center;">
+              <span style="color: var(--accent-amber); font-size: 8.5px;">STAKE TRANSITION</span><br>
+              <strong id="pos-modal-stake-change" style="color: #ffb703; font-size: 11px;">16.0 → 0.0 Q</strong>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 8px; border-radius: 6px; border: 1px solid rgba(0, 255, 136, 0.2); text-align: center;">
+              <span style="color: var(--accent-green); font-size: 8.5px;">WHISTLEBLOWER BOUNTY</span><br>
+              <strong id="pos-modal-whistleblower" style="color: var(--accent-green); font-size: 10.5px;">🛡️ +1.6 Q</strong>
+            </div>
+          </div>
+
+          <!-- Infraction Details -->
+          <div style="background: rgba(0,0,0,0.3); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+              <span id="pos-modal-offense-icon" style="font-size: 16px;">⚔️</span>
+              <strong id="pos-modal-offense" style="color: #fff; font-size: 12px;">Slashing Condition: Equivocation / Double-Signing</strong>
+            </div>
+            <p id="pos-modal-reason" style="font-size: 11.5px; color: #cbd5e1; line-height: 1.45; margin: 0;">
+              The proposer attempted to sign two competing blocks for the same slot. Peer validators detected the cryptographic contradiction, rejected the block, and executed automated slashing.
+            </p>
+          </div>
+
+          <!-- PoS vs PoW Deep Dive -->
+          <div style="background: rgba(255,255,255,0.02); padding: 10px 12px; border-radius: 6px; font-size: 11px; color: #94a3b8; line-height: 1.5;">
+            <strong style="color: var(--accent-cyan); font-size: 11px;">Why Proof of Stake Defeats Attacks:</strong>
+            <p style="margin: 4px 0 0 0;">
+              In Proof of Work, an unsuccessful attacker still keeps their physical mining hardware. In Proof of Stake, attackers must lock their coins as capital. The moment they attempt a double-spend or chain reorganization, honest validators submit evidence and the network <strong>destroys their locked wealth permanently</strong>.
+            </p>
+          </div>
+
+          <button id="btn-ack-pos" class="action-btn primary-action" style="background: var(--accent-red); color: #fff; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Return to Consensus Lab 🛡️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9. NOTHING-AT-STAKE EDUCATIONAL MODAL -->
+    <div id="nothing-at-stake-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="nas-modal-title">
+      <div class="modal-card" style="max-width: 620px; border-color: var(--accent-cyan); background: radial-gradient(circle at top, #0f1d2a 0%, #050a10 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">PROOF OF STAKE GAME THEORY</span>
+            <h2 id="nas-modal-title" style="color: var(--accent-cyan);">🌱 Nothing-at-Stake & Slashing Defense</h2>
+          </div>
+          <button id="btn-close-nas-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(0, 240, 255, 0.12); border-left: 3px solid var(--accent-cyan); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Core Security Invariant:</div>
+            <p id="nas-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "In naive PoS, validators could vote on every fork with no cost. Slashing fixes this — signing two forks = losing stake."
+            </p>
+          </div>
+
+          <!-- PoW vs PoS Detailed Comparison -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: var(--font-mono); font-size: 10.5px;">
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 183, 3, 0.3);">
+              <div style="color: var(--accent-amber); font-weight: bold; margin-bottom: 4px;">⛏️ PROOF OF WORK:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li>Miners must split physical hashrate (50% on A, 50% on B).</li>
+                <li>Mining costs electricity ($3.25/hr).</li>
+                <li>Thermodynamic scarcity prevents costless double-mining.</li>
+              </ul>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(0, 240, 255, 0.3);">
+              <div style="color: var(--accent-cyan); font-weight: bold; margin-bottom: 4px;">🌱 NAIVE PROOF OF STAKE:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li>Signing a block costs zero marginal energy ($0.00).</li>
+                <li>Rational strategy: sign BOTH forks to guarantee payout!</li>
+                <li>Result: perpetual network forks and no consensus.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- The Slashing Solution -->
+          <div style="background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); padding: 10px 12px; border-radius: 6px; font-size: 11px; line-height: 1.45; color: #cbd5e1;">
+            <strong style="color: #ff3366;">How Slashing Solves the Problem:</strong><br>
+            Modern PoS protocols (like Casper FFG) introduce <strong>Equivocation Slashing</strong>. If a validator signs two conflicting blocks at the same slot height, peer nodes broadcast cryptographic proof. The network immediately burns <strong>100% of their locked stake</strong> and ejects them. This makes voting on multiple forks economically suicidal!
+          </div>
+
+          <button id="btn-ack-nas" class="action-btn primary-action" style="background: var(--accent-cyan); color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Slashing Invariant Mastered 🛡️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10. LONG-RANGE ATTACK EDUCATIONAL MODAL -->
+    <div id="long-range-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="lr-modal-title">
+      <div class="modal-card" style="max-width: 620px; border-color: var(--accent-purple); background: radial-gradient(circle at top, #21102e 0%, #0c0512 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(157, 78, 221, 0.2); color: var(--accent-purple); border: 1px solid var(--accent-purple);">HISTORICAL FORK DEFENSE</span>
+            <h2 id="lr-modal-title" style="color: var(--accent-purple);">⏳ Long-Range Attack & Weak Subjectivity</h2>
+          </div>
+          <button id="btn-close-lr-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(157, 78, 221, 0.12); border-left: 3px solid var(--accent-purple); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-purple); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Core Security Invariant:</div>
+            <p id="lr-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "Long-range attacks rewrite deep history. PoS defends with finality checkpoints and social consensus on the correct chain."
+            </p>
+          </div>
+
+          <!-- Attack Mechanics Breakdown -->
+          <div style="background: rgba(0,0,0,0.4); padding: 10px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); font-size: 11px; line-height: 1.5; color: #cbd5e1;">
+            <strong style="color: #ffb703;">1. The Costless Simulation Loophole:</strong><br>
+            In PoW, rewriting 500 blocks requires burning billions in real electricity. In PoS, once early validators (like Alice & Bob) withdraw their stake and sell their coins, their old private keys have zero value. An attacker buys these expired keys and simulates thousands of historical blocks in fractions of a second with no cost and zero capital at risk.
+          </div>
+
+          <!-- The Weak Subjectivity Defense -->
+          <div style="background: rgba(0, 240, 255, 0.08); border-left: 3px solid var(--accent-cyan); padding: 10px 12px; border-radius: 4px; font-size: 11px; line-height: 1.5; color: #cbd5e1;">
+            <strong style="color: var(--accent-cyan);">2. The Weak Subjectivity Checkpoint Defense:</strong><br>
+            Because PoS lacks thermodynamic anchoring to the physical world, it relies on <strong>Weak Subjectivity</strong>:
+            <ul style="margin: 4px 0 0 0; padding-left: 14px;">
+              <li>Nodes maintain periodic <strong>Finality Checkpoints</strong> (e.g. every 100 blocks).</li>
+              <li>Any competing chain that branches prior to the latest finalized checkpoint within the unbonding window is <strong>instantly rejected</strong>, no matter how long it is!</li>
+              <li>Newly joining nodes seed their state with a trusted recent block hash via social consensus, neutralizing historical reorgs completely.</li>
+            </ul>
+          </div>
+
+          <button id="btn-ack-lr" class="action-btn primary-action" style="background: var(--accent-purple); color: #fff; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Weak Subjectivity Invariant Mastered 🛡️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. DELEGATED STAKING & LIQUID STAKING (LST) EDUCATIONAL MODAL -->
+    <div id="delegated-staking-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="delegated-modal-title">
+      <div class="modal-card" style="max-width: 640px; border-color: var(--accent-cyan); background: radial-gradient(circle at top, #0f2238 0%, #050d18 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">PROOF OF STAKE LIQUID CAPITAL</span>
+            <h2 id="delegated-modal-title" style="color: var(--accent-cyan);">🤝 Delegated Staking & Liquid Staking Tokens (LST)</h2>
+          </div>
+          <button id="btn-close-delegated-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(0, 240, 255, 0.12); border-left: 3px solid var(--accent-cyan); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Core Staking Architecture:</div>
+            <p id="delegated-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "Most users don't run validators. They delegate to pools like Lido or Coinbase, receiving a liquid token they can still use in DeFi."
+            </p>
+          </div>
+
+          <!-- Deep-Dive Breakdown Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: var(--font-mono); font-size: 10.5px;">
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(0, 240, 255, 0.25);">
+              <div style="color: var(--accent-cyan); font-weight: bold; margin-bottom: 4px;">🌊 LIQUID STAKING TOKENS (LST):</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li>When you stake natively, capital is locked & illiquid.</li>
+                <li>Delegation pools mint a 1:1 receipt token (e.g. <code>stETH</code> or <code>stQUEST</code>).</li>
+                <li>Trade on DEXs or supply to DeFi while still earning base staking yield!</li>
+              </ul>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 183, 3, 0.25);">
+              <div style="color: var(--accent-amber); font-weight: bold; margin-bottom: 4px;">⚡ COMMISSION & REWARDS:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li>Professional node operators run 24/7 high-uptime servers.</li>
+                <li>Validators charge a small commission (typically 5%–10%).</li>
+                <li>The remaining 90%+ protocol rewards stream directly to delegators!</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Slashing Risk Contagion -->
+          <div style="background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); padding: 10px 12px; border-radius: 6px; font-size: 11px; line-height: 1.45; color: #cbd5e1;">
+            <strong style="color: #ff3366;">⚠️ Slashing Risk Contagion (Skin in the Game):</strong><br>
+            Delegated staking does not eliminate protocol risk! If your validator double-signs (equivocation) or goes offline, <strong>slashing penalties cascade proportionally to all delegators</strong>. Delegators are financially incentivized to distribute their stake to decentralized, reliable, and honest node operators.
+          </div>
+
+          <button id="btn-ack-delegated" class="action-btn primary-action" style="background: var(--accent-cyan); color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Delegated Staking Mastered 🤝
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. INTERACTIVE DELEGATE ACTION MODAL -->
+    <div id="delegate-action-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="delegate-action-title">
+      <div class="modal-card" style="max-width: 500px; border-color: var(--accent-green); background: radial-gradient(circle at top, #0d281e 0%, #05120d 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 255, 136, 0.2); color: var(--accent-green); border: 1px solid var(--accent-green);">DELEGATION ENGINE</span>
+            <h2 id="delegate-action-title" style="color: var(--accent-green);">🤝 Delegate to Validator</h2>
+          </div>
+          <button id="btn-close-delegate-action" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Validator Target Summary Card -->
+          <div id="delegate-target-val-info" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; font-family: var(--font-mono); font-size: 10.5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span id="del-modal-val-name" style="color: #fff; font-weight: bold; font-size: 12px;">⚡ Validator Alpha</span>
+              <span class="badge-label" style="background: rgba(0, 255, 136, 0.15); color: var(--accent-green); font-size: 8.5px;">ACTIVE NODE</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; color: #94a3b8; font-size: 9.5px;">
+              <span>Total Node Stake: <strong id="del-modal-val-stake" style="color: var(--accent-amber);">32.0 QUEST</strong></span>
+              <span>Commission Rate: <strong style="color: var(--accent-cyan);">10% Fee</strong></span>
+            </div>
+          </div>
+
+          <!-- Balance & Input -->
+          <div style="background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 4px; display: flex; justify-content: space-between; font-size: 10px;">
+            <span style="color: #94a3b8;">Available Wallet Balance:</span>
+            <strong id="del-modal-wallet-bal" style="color: var(--accent-green); font-family: var(--font-mono);">100.00 QUEST</strong>
+          </div>
+
+          <div>
+            <label for="delegate-action-amount" style="font-size: 10px; font-weight: bold; color: #94a3b8; margin-bottom: 4px; display: block;">AMOUNT TO DELEGATE (QUEST):</label>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="number" id="delegate-action-amount" class="tx-input" min="1" value="10" style="flex: 1; padding: 7px 10px; font-size: 12px; font-family: var(--font-mono);" />
+              <div style="display: flex; gap: 4px;">
+                <button class="hud-btn btn-del-preset" data-val="5" style="font-size: 9px; padding: 4px 7px;">5</button>
+                <button class="hud-btn btn-del-preset" data-val="10" style="font-size: 9px; padding: 4px 7px;">10</button>
+                <button class="hud-btn btn-del-preset" data-val="25" style="font-size: 9px; padding: 4px 7px;">25</button>
+                <button class="hud-btn btn-del-preset" data-val="max" style="font-size: 9px; padding: 4px 7px;">MAX</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- LST Mint Preview -->
+          <div style="background: rgba(0, 240, 255, 0.1); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 4px; padding: 8px 10px; font-size: 10.5px; font-family: var(--font-mono); display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: #94a3b8;">Liquid Staking Receipt:</span>
+            <strong id="del-modal-preview-lst" style="color: var(--accent-cyan);">+10.00 stQUEST (1:1)</strong>
+          </div>
+
+          <!-- Slashing Risk Warning -->
+          <div style="background: rgba(255, 51, 102, 0.1); border-left: 3px solid var(--accent-red); padding: 8px 10px; border-radius: 3px; font-size: 9.5px; color: #cbd5e1; line-height: 1.4;">
+            <strong style="color: var(--accent-red);">⚠️ Slashing Contagion Warning:</strong>
+            If this validator double-signs or goes offline, your delegated capital will be slashed proportionally. You can redeem or trade your stQUEST anytime.
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 8px; margin-top: 4px;">
+            <button id="btn-cancel-delegate-action" class="hud-btn" style="flex: 1; justify-content: center; font-size: 11px; padding: 8px;">Cancel</button>
+            <button id="btn-confirm-delegate-action" class="action-btn primary-action" style="flex: 2; justify-content: center; background: var(--accent-green); color: #000; font-weight: bold; font-size: 11px; padding: 8px;">
+              Confirm & Mint stQUEST 🤝
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 13. RANDAO VERIFIABLE RANDOMNESS EDUCATIONAL MODAL -->
+    <div id="randao-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="randao-modal-title">
+      <div class="modal-card" style="max-width: 640px; border-color: var(--accent-amber); background: radial-gradient(circle at top, #261b0c 0%, #0c0804 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 183, 3, 0.2); color: var(--accent-amber); border: 1px solid var(--accent-amber);">CONSENSUS GAME THEORY</span>
+            <h2 id="randao-modal-title" style="color: var(--accent-amber);">🎲 RANDAO, VRF & Verifiable Randomness</h2>
+          </div>
+          <button id="btn-close-randao-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(255, 183, 3, 0.12); border-left: 3px solid var(--accent-amber); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-amber); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Core Cryptographic Invariant:</div>
+            <p id="randao-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "Randomness must be unpredictable and verifiable. Ethereum uses RANDAO — each proposer contributes entropy, and the XOR of contributions selects the next proposer."
+            </p>
+          </div>
+
+          <!-- Deep-Dive Breakdown Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-family: var(--font-mono); font-size: 10.5px;">
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 183, 3, 0.25);">
+              <div style="color: var(--accent-amber); font-weight: bold; margin-bottom: 4px;">⚙️ THE BITWISE XOR ACCUMULATOR:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li>Every block proposer reveals a secret entropy hash.</li>
+                <li>The beacon state mixes it via bitwise XOR: <code>Mix_s = Mix_{s-1} ⊕ Hash(Reveal)</code>.</li>
+                <li>No single validator can predict or manipulate future proposers!</li>
+              </ul>
+            </div>
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(0, 240, 255, 0.25);">
+              <div style="color: var(--accent-cyan); font-weight: bold; margin-bottom: 4px;">📊 PROPORTIONAL LOTTERY:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li>Selection probability is strictly linear: <code>P(val) = Stake / TotalStake</code>.</li>
+                <li>Guarantees Sybil resistance: splitting stake into 100 nodes yields the exact same chance as 1 large node.</li>
+                <li>Law of Large Numbers ensures long-term rewards match stake share!</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Why Naive Randomness Fails -->
+          <div style="background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); padding: 10px 12px; border-radius: 6px; font-size: 11px; line-height: 1.45; color: #cbd5e1;">
+            <strong style="color: #ff3366;">🚫 Why On-Chain Pseudo-Randomness Fails (Grinding Attacks):</strong><br>
+            If a blockchain used simple numbers like <code>block.timestamp</code> or <code>block.prevhash</code>, a validator could simulate their odds in advance and withhold or delay blocks until they guaranteed winning the next slot. RANDAO's commit-reveal and XOR entropy accumulator eliminates grinding attacks and keeps consensus secure.
+          </div>
+
+          <button id="btn-ack-randao" class="action-btn primary-action" style="background: var(--accent-amber); color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — RANDAO Randomness Mastered 🎲
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 14. CONSENSUS COMPARISON EDUCATIONAL MODAL -->
+    <div id="consensus-compare-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
+      <div class="modal-card" style="max-width: 680px; border-color: var(--accent-cyan); background: radial-gradient(circle at top, #131c2e 0%, #080c16 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">CONSENSUS ARCHITECTURE & TRADE-OFFS</span>
+            <h2 id="compare-modal-title" style="color: var(--accent-cyan);">⚖️ Proof of Work vs Proof of Stake</h2>
+          </div>
+          <button id="btn-close-compare-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(0, 240, 255, 0.12); border-left: 3px solid var(--accent-cyan); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Fundamental Architectural Law:</div>
+            <p id="compare-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "PoW security = physical resources. PoS security = locked capital. Each has trade-offs."
+            </p>
+          </div>
+
+          <!-- Deep-Dive Comparison Columns -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10.5px;">
+            <!-- PoW Card -->
+            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px; padding: 10px;">
+              <div style="color: #f59e0b; font-weight: bold; margin-bottom: 6px; font-size: 11px;">⛏️ PROOF OF WORK (BITCOIN)</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li><strong>Security Anchor:</strong> Real-world thermodynamics and continuous electrical wattage.</li>
+                <li><strong>Attack Penalty:</strong> Sunk electricity costs, but physical ASIC miners survive to attack again.</li>
+                <li><strong>Finality:</strong> Probabilistic ($6$ confirmations / $60$ min). Deep reorganization theoretically possible.</li>
+                <li><strong>Trade-off:</strong> Enormous power footprint ($10,000+$ MW) and ASIC manufacturing concentration.</li>
+              </ul>
+            </div>
+
+            <!-- PoS Card -->
+            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 6px; padding: 10px;">
+              <div style="color: #00f0ff; font-weight: bold; margin-bottom: 6px; font-size: 11px;">🌱 PROOF OF STAKE (ETHEREUM)</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li><strong>Security Anchor:</strong> Bonded financial stake locked into protocol consensus deposits.</li>
+                <li><strong>Attack Penalty:</strong> Automated in-protocol slashing. $100\%$ of attacker capital ($15\text{B}+$) burned!</li>
+                <li><strong>Finality:</strong> Deterministic (Casper FFG $2/3$ checkpoint attestation / $12.8$ min).</li>
+                <li><strong>Trade-off:</strong> Capital accumulation ("rich get richer"), weak subjectivity, and pool centralization.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Comprehensive 6-Dimension Comparison Matrix -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px;">
+            <div style="font-size: 10px; color: #94a3b8; font-weight: bold; margin-bottom: 6px;">
+              📊 6-DIMENSION ARCHITECTURAL BENCHMARK:
+            </div>
+            <table style="width: 100%; font-size: 9.5px; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="background: rgba(255,255,255,0.05); color: #94a3b8;">
+                  <th style="padding: 4px 6px;">Dimension</th>
+                  <th style="padding: 4px 6px; color: #f59e0b;">Proof of Work</th>
+                  <th style="padding: 4px 6px; color: #00f0ff;">Proof of Stake</th>
+                </tr>
+              </thead>
+              <tbody style="color: #cbd5e1;">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">1. Finality Time</td>
+                  <td style="padding: 4px 6px;">60 mins (Probabilistic, Reorg Risk)</td>
+                  <td style="padding: 4px 6px;">12.8 mins (Deterministic Casper FFG)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">2. Energy Consumed</td>
+                  <td style="padding: 4px 6px;">10,500 MW (Grid-Scale Power Plants)</td>
+                  <td style="padding: 4px 6px;">0.0026 MW (99.98% Energy Reduction)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">3. Cost to Attack 51%</td>
+                  <td style="padding: 4px 6px;">$14.2B CapEx + $1.45M/hr OpEx</td>
+                  <td style="padding: 4px 6px;">$24.8B Capital (100% Slashed & Burned)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">4. Hardware Req.</td>
+                  <td style="padding: 4px 6px;">Industrial ASICs, HVAC, 3-Phase Power</td>
+                  <td style="padding: 4px 6px;">Consumer Mini PC (Raspberry Pi 4, 15W)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">5. Censorship Resistance</td>
+                  <td style="padding: 4px 6px;">Physical facilities vulnerable to shutdown</td>
+                  <td style="padding: 4px 6px;">No thermal signature; DVT distributed keys</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">6. Decentralization</td>
+                  <td style="padding: 4px 6px;">Mining pools (2 pools hold 60% hashrate)</td>
+                  <td style="padding: 4px 6px;">Validator dispersion & liquid staking pools</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <button id="btn-ack-compare" class="action-btn primary-action" style="background: var(--accent-cyan); color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Mastered Consensus Trade-Offs ⚖️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 15. PROOF OF STAKE ATTACK THRESHOLDS EDUCATIONAL MODAL -->
+    <div id="pos-threshold-attack-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="pos-threshold-modal-title">
+      <div class="modal-card" style="max-width: 680px; border-color: var(--accent-red); background: radial-gradient(circle at top, #281016 0%, #0c0507 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 51, 102, 0.2); color: var(--accent-red); border: 1px solid var(--accent-red);">CONSENSUS GAME THEORY & CRYPTOECONOMICS</span>
+            <h2 id="pos-threshold-modal-title" style="color: #ff3366;">⚔️ PoS Attack Thresholds & Economic Suicide</h2>
+          </div>
+          <button id="btn-close-pos-threshold-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(255, 51, 102, 0.12); border-left: 3px solid var(--accent-red); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-red); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Fundamental Cryptoeconomic Invariant:</div>
+            <p id="pos-threshold-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "In PoS, attacking means buying most of the supply — which drives the price up — and then losing it to slashing. Economically suicidal."
+            </p>
+          </div>
+
+          <!-- 3 Threshold Breakdown Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 10px;">
+            <!-- 34% Card -->
+            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 6px; padding: 8px;">
+              <div style="color: #f59e0b; font-weight: bold; margin-bottom: 4px; font-size: 10.5px;">⚠️ 34% Attack (Liveness)</div>
+              <ul style="margin: 0; padding-left: 12px; color: #cbd5e1; line-height: 1.45;">
+                <li><strong>Capability:</strong> Halt Casper FFG 2/3 checkpoint finality by going offline or withholding votes.</li>
+                <li><strong>Limitation:</strong> CANNOT rewrite history or reverse finalized blocks.</li>
+                <li><strong>Defense:</strong> Inactivity Leak protocol drains offline stake until honest nodes regain 2/3.</li>
+              </ul>
+            </div>
+
+            <!-- 51% Card -->
+            <div style="background: rgba(255, 136, 0, 0.08); border: 1px solid rgba(255, 136, 0, 0.3); border-radius: 6px; padding: 8px;">
+              <div style="color: #ff8800; font-weight: bold; margin-bottom: 4px; font-size: 10.5px;">🚨 51% Attack (Reorg)</div>
+              <ul style="margin: 0; padding-left: 12px; color: #cbd5e1; line-height: 1.45;">
+                <li><strong>Capability:</strong> Monopolize block proposals, censor transactions, and reorg recent unfinalized slots.</li>
+                <li><strong>Limitation:</strong> Cannot finalize arbitrary checkpoints without 66%.</li>
+                <li><strong>Defense:</strong> Double-signing creates cryptographic fraud proofs triggering 100% Mass Slashing!</li>
+              </ul>
+            </div>
+
+            <!-- 66% Card -->
+            <div style="background: rgba(255, 51, 102, 0.08); border: 1px solid rgba(255, 51, 102, 0.3); border-radius: 6px; padding: 8px;">
+              <div style="color: #ff3366; font-weight: bold; margin-bottom: 4px; font-size: 10.5px;">💥 66% Attack (Arbitrary)</div>
+              <ul style="margin: 0; padding-left: 12px; color: #cbd5e1; line-height: 1.45;">
+                <li><strong>Capability:</strong> Unilaterally finalize arbitrary, conflicting, or fraudulent blocks.</li>
+                <li><strong>Limitation:</strong> Requires buying 66.7% of all staked capital ($60B+).</li>
+                <li><strong>Defense:</strong> Social Consensus Hard Fork: honest community forks away, burning attacker stake to 0!</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Why PoS Attacks are Economically Suicidal -->
+          <div style="background: rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; font-size: 10.5px; color: #cbd5e1; line-height: 1.5;">
+            <strong style="color: var(--accent-cyan);">Why PoS Attacks Differ from PoW (The Asymmetry of Locked Capital):</strong>
+            <p style="margin: 4px 0 0 0;">
+              In Proof of Work, an attacker buys physical ASICs. Even after a 51% reorg, they retain their physical hardware and can attack other networks or sell the rigs. In Proof of Stake, the attacker must purchase the protocol's native coins on the open market. Buying 34%, 51%, or 66% of the supply causes massive upward price slippage (+50% to +220%). Once the attack is detected, the protocol or community executes slashing—<strong>permanently destroying 100% of the attacker's capital</strong>. It is the purest cryptoeconomic definition of financial suicide.
+            </p>
+          </div>
+
+          <button id="btn-ack-pos-threshold" class="action-btn primary-action" style="background: var(--accent-red); color: #fff; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — PoS Attack Thresholds Mastered 🛡️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 16. FINALITY COMPARISON EDUCATIONAL MODAL -->
+    <div id="finality-comparison-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="finality-modal-title">
+      <div class="modal-card" style="max-width: 680px; border-color: var(--accent-cyan); background: radial-gradient(circle at top, #121c2e 0%, #070c15 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(0, 240, 255, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan);">CONSENSUS FINALITY MECHANISMS</span>
+            <h2 id="finality-modal-title" style="color: var(--accent-cyan);">🔒 Probabilistic vs Deterministic Finality</h2>
+          </div>
+          <button id="btn-close-finality-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Core Educational Highlight Quote -->
+          <div style="background: rgba(0, 240, 255, 0.12); border-left: 3px solid var(--accent-cyan); padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: var(--accent-cyan); font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Fundamental Consensus Invariant:</div>
+            <p id="finality-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "PoW has probabilistic finality — the deeper a block, the safer. PoS has deterministic finality — after finalization, reversion is economically impossible."
+            </p>
+          </div>
+
+          <!-- Deep-Dive Comparison Columns -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10.5px;">
+            <!-- PoW Card -->
+            <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px; padding: 10px;">
+              <div style="color: #f59e0b; font-weight: bold; margin-bottom: 6px; font-size: 11px;">⛏️ PROOF OF WORK: PROBABILISTIC</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li><strong>Exponential Decay:</strong> Each confirmation block atop a tx drops reorg odds: <code>P ≈ (q/p)^k</code>.</li>
+                <li><strong>Satoshi Standard:</strong> 6 blocks (~60 min) provides &gt;99.4% statistical security against 30% miners.</li>
+                <li><strong>Key Reality:</strong> Finality is never strictly 0.00%. A deep reorg remains physically possible with enough energy.</li>
+              </ul>
+            </div>
+
+            <!-- PoS Card -->
+            <div style="background: rgba(0, 240, 255, 0.08); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 6px; padding: 10px;">
+              <div style="color: #00f0ff; font-weight: bold; margin-bottom: 6px; font-size: 11px;">🌱 PROOF OF STAKE: DETERMINISTIC</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.5;">
+                <li><strong>2-Epoch Checkpointing:</strong> 2 epochs (~12.8 min) with 2/3+ votes locks the block as permanently Finalized 🔒.</li>
+                <li><strong>1/3 Slashing Shield:</strong> Reversion is impossible without signing conflicting checkpoints, which burns &ge;1/3 of all stake ($32.0B).</li>
+                <li><strong>Key Reality:</strong> Finality is deterministic—reverting is not merely computationally hard, it is economically impossible.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Summary Benchmark Matrix -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px;">
+            <table style="width: 100%; font-size: 9.5px; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr style="background: rgba(255,255,255,0.05); color: #94a3b8;">
+                  <th style="padding: 4px 6px;">Dimension</th>
+                  <th style="padding: 4px 6px; color: #f59e0b;">PoW (Bitcoin)</th>
+                  <th style="padding: 4px 6px; color: #00f0ff;">PoS (Ethereum)</th>
+                </tr>
+              </thead>
+              <tbody style="color: #cbd5e1;">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">Finality Nature</td>
+                  <td style="padding: 4px 6px;">Probabilistic (Poisson process)</td>
+                  <td style="padding: 4px 6px;">Deterministic (Casper FFG protocol)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">Time to Finality</td>
+                  <td style="padding: 4px 6px;">~60 mins (6 Confirmations)</td>
+                  <td style="padding: 4px 6px;">~12.8 mins (2 Epochs)</td>
+                </tr>
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">Reorganization Risk</td>
+                  <td style="padding: 4px 6px;">Decays exponentially, never 0.00%</td>
+                  <td style="padding: 4px 6px;">0.00% without burning &ge;1/3 stake</td>
+                </tr>
+                <tr>
+                  <td style="padding: 4px 6px; font-weight: bold; color: #fff;">Reversion Penalty</td>
+                  <td style="padding: 4px 6px;">Electricity burned; ASICs kept</td>
+                  <td style="padding: 4px 6px;">&ge;1/3 Validator Stake ($32.0B) Burned</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <button id="btn-ack-finality" class="action-btn primary-action" style="background: var(--accent-cyan); color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Finality Principles Mastered 🔒
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 18. SOFT / HARD FORK SIMULATOR EDUCATIONAL MODAL -->
+    <div id="fork-simulator-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="fork-modal-title">
+      <div class="modal-card" style="max-width: 680px; border-color: #f59e0b; background: radial-gradient(circle at top, #1a1205 0%, #0a0803 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(245,158,11,0.2); color: #f59e0b; border: 1px solid #f59e0b;">CONSENSUS UPGRADE MECHANICS</span>
+            <h2 id="fork-modal-title" style="color: #f59e0b;">🍴 Soft Forks &amp; Hard Forks — Upgrading a Live Blockchain</h2>
+          </div>
+          <button id="btn-close-fork-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+
+          <!-- Required verbatim educational quote -->
+          <div style="background: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: #f59e0b; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Core Consensus Upgrade Principle:</div>
+            <p id="fork-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "Soft forks are backward-compatible rule tightenings. Hard forks are rule changes that split the network unless everyone upgrades."
+            </p>
+          </div>
+
+          <!-- Side-by-side comparison -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10.5px;">
+            <div style="background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.3); padding: 10px; border-radius: 6px;">
+              <div style="color: #00ff88; font-weight: bold; margin-bottom: 6px;">✅ SOFT FORK — Rule Tightening</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.6; font-size: 9.5px;">
+                <li>New rule is a <strong style="color:#fff;">strict subset</strong> of old rule</li>
+                <li>Old nodes see new blocks as <strong style="color:#00ff88;">valid</strong></li>
+                <li>No network split — single chain survives</li>
+                <li>Upgrades can be deployed gradually</li>
+                <li><strong>Example: SegWit (BIP141)</strong> — moved witness data to a new field. Old nodes couldn't see the new data but still accepted blocks. Reduced tx size by ~65%, enabled Lightning Network.</li>
+                <li><strong>Example: Taproot (BIP340–342)</strong> — tightened scriptPubKey validation. Old nodes accepted the new outputs.</li>
+              </ul>
+            </div>
+            <div style="background: rgba(255,51,102,0.08); border: 1px solid rgba(255,51,102,0.3); padding: 10px; border-radius: 6px;">
+              <div style="color: #ff6688; font-weight: bold; margin-bottom: 6px;">💥 HARD FORK — Incompatible Change</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.6; font-size: 9.5px;">
+                <li>New rule makes old blocks <strong style="color:#ff6688;">invalid</strong></li>
+                <li>Old nodes <strong>reject</strong> new blocks → mine their own</li>
+                <li>Network splits permanently into two chains</li>
+                <li>All nodes must upgrade or be left behind</li>
+                <li><strong>Example: ETH / ETC (2016)</strong> — Ethereum forked after the DAO hack to reverse the theft. Nodes disagreeing stayed on Ethereum Classic (ETC). Both chains still exist.</li>
+                <li><strong>Example: BCH / BTC (2017)</strong> — Bitcoin Cash increased block size to 8 MB, incompatible with Bitcoin's 1 MB rule. Permanent split.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Coordination Challenge -->
+          <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 12px; font-size: 10.5px; color: #cbd5e1; line-height: 1.5;">
+            <strong style="color: var(--accent-cyan);">🤝 The Coordination Problem:</strong>
+            <p style="margin: 6px 0 0 0;">Hard forks require near-universal adoption. If even 10% of miners/validators refuse to upgrade, two viable chains coexist. This is what happened with ETH/ETC. Soft forks are safer — majority miner activation enforces the new rule without requiring every node to upgrade immediately. This is why Bitcoin uses BIPs (Bitcoin Improvement Proposals) and careful soft-fork activation via BIP8/BIP9 signaling before enforcing any rule change.</p>
+          </div>
+
+          <button id="btn-ack-fork" class="action-btn primary-action" style="background: #f59e0b; color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — Fork Mechanics Mastered 🍴
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 17. THE MERGE (2022) EDUCATIONAL MODAL -->
+    <div id="merge-educational-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="merge-modal-title">
+      <div class="modal-card" style="max-width: 700px; border-color: #ffd700; background: radial-gradient(circle at top, #20180a 0%, #0d0a04 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" style="background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700;">ETHEREUM CONSENSUS UPGRADE · SEPTEMBER 15, 2022</span>
+            <h2 id="merge-modal-title" style="color: #ffd700;">🐼 The Merge: Largest Consensus Upgrade in Blockchain History</h2>
+          </div>
+          <button id="btn-close-merge-modal" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+
+          <!-- Verbatim Required Quote -->
+          <div style="background: rgba(255, 215, 0, 0.12); border-left: 3px solid #ffd700; padding: 12px 14px; border-radius: 4px;">
+            <div style="font-size: 10px; text-transform: uppercase; color: #ffd700; font-weight: bold; letter-spacing: 1px; margin-bottom: 4px;">Foundational Cryptoeconomic Milestone:</div>
+            <p id="merge-quote" style="font-size: 13.5px; font-weight: 600; color: #fff; line-height: 1.5; margin: 0;">
+              "The Merge was the largest upgrade in blockchain history. It swapped consensus engines on a live chain with zero downtime and cut Ethereum's energy use by ~99.95%."
+            </p>
+          </div>
+
+          <!-- Historical Data Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10.5px;">
+            <!-- Left: The Merge Block -->
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(255, 215, 0, 0.25);">
+              <div style="color: #ffd700; font-weight: bold; margin-bottom: 6px;">⛓️ HISTORICAL BLOCK DATA:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.55; font-family: var(--font-mono); font-size: 9.5px;">
+                <li><strong style="color: #fff;">Last PoW Block:</strong> #15,537,394</li>
+                <li><strong style="color: #fff;">Mined by:</strong> F2Pool 🐟</li>
+                <li><strong style="color: #fff;">ExtraData:</strong> "Add Panda 9 was merged"</li>
+                <li><strong style="color: #fff;">TTD Reached:</strong> 58,750,000,000,000,000,000,000</li>
+                <li><strong style="color: #fff;">First PoS Block:</strong> #15,537,395</li>
+                <li><strong style="color: #fff;">Beacon Slot:</strong> 4,700,013</li>
+                <li><strong style="color: #fff;">Proposer:</strong> 0xeee8… (Attestation: 99.8%)</li>
+              </ul>
+            </div>
+            <!-- Right: Energy Metrics -->
+            <div style="background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(0, 255, 136, 0.25);">
+              <div style="color: #00ff88; font-weight: bold; margin-bottom: 6px;">⚡ THERMODYNAMIC ENERGY COLLAPSE:</div>
+              <ul style="margin: 0; padding-left: 14px; color: #cbd5e1; line-height: 1.55; font-family: var(--font-mono); font-size: 9.5px;">
+                <li><strong style="color: #f59e0b;">PoW Energy:</strong> ~8.5 GW (~78 TWh/yr)</li>
+                <li><strong style="color: #f59e0b;">Equivalent to:</strong> Chile / Austria power grid</li>
+                <li><strong style="color: #00ff88;">PoS Energy:</strong> ~2.6 kW (~0.0026 TWh/yr)</li>
+                <li><strong style="color: #00ff88;">Equivalent to:</strong> 2 US households</li>
+                <li><strong style="color: #ffd700;">Reduction:</strong> <strong>-99.95%</strong> (40,000× cleaner)</li>
+                <li><strong style="color: #ffd700;">CO₂ Savings:</strong> ~11M tonnes / year</li>
+                <li><strong style="color: #ffd700;">Downtime:</strong> 0.00 seconds 🏆</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- The Difficulty Bomb -->
+          <div style="background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); padding: 10px 12px; border-radius: 6px; font-size: 11px; line-height: 1.45; color: #cbd5e1;">
+            <strong style="color: #ff3366;">💣 The Difficulty Bomb (Ice Age) — EIP-4345 / EIP-5133:</strong><br>
+            Ethereum developers inserted an exponential difficulty escalation into the PoW consensus engine. Every 100,000 blocks, mining time roughly doubled — eventually making PoW blocks take minutes, then hours. This "ticking bomb" forced the Ethereum community to execute The Merge by a hard deadline, preventing any delay or stalling by mining pools who preferred PoW revenue. At Block #15,537,394, it was permanently defused when PoS slots took over with a fixed 12.0-second cadence.
+          </div>
+
+          <!-- Upgrade Architecture -->
+          <div style="background: rgba(0,0,0,0.35); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); padding: 10px 12px; font-size: 10.5px; color: #cbd5e1;">
+            <strong style="color: var(--accent-cyan);">🏗️ Dual-Layer Upgrade Architecture (Paris + Bellatrix):</strong>
+            <p style="margin: 6px 0 0 0; line-height: 1.5;">
+              The Merge required a synchronized upgrade across <strong>two separate protocol layers</strong>. The <em>Execution Layer</em> (Geth, Nethermind, Besu) upgraded to <strong>Paris (EIP-3675)</strong>, disabling PoW and enabling Beacon Chain finality. The <em>Consensus Layer</em> (Prysm, Lighthouse, Teku, Nimbus) upgraded to <strong>Bellatrix</strong>, enabling block proposals from the Beacon Chain. Both layers had to coordinate precisely at the TTD threshold — one block too early or late would have split the network. It succeeded flawlessly on the first attempt.
+            </p>
+          </div>
+
+          <button id="btn-ack-merge" class="action-btn primary-action" style="background: #ffd700; color: #000; font-weight: bold; justify-content: center; width: 100%;">
+            Understood — The Merge Mastered 🐼
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. "BLOCKCHAIN COMPLETE!" MASTER CERTIFICATE MODAL -->
+    <div id="certificate-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="cert-title">
+      <div class="modal-card" style="max-width: 720px; border-color: #ffd700; background: radial-gradient(circle at top, #141c2e 0%, #080c16 100%);">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-badge" id="cert-status-badge" style="background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700;">OFFICIAL MASTER CERTIFICATE</span>
+            <h2 id="cert-title" style="color: #ffd700;">🎓 Blockchain Complete!</h2>
+          </div>
+          <button id="btn-close-certificate" class="close-btn">&times;</button>
+        </header>
+        <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+          <!-- Printable Certificate Paper Frame -->
+          <div id="printable-certificate" style="border: 2px solid #ffd700; padding: 24px; border-radius: 8px; background: rgba(0,0,0,0.6); position: relative; text-align: center; box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);">
+            <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent-cyan); margin-bottom: 4px;">CERTIFICATE OF CRYPTOGRAPHIC MASTERY</div>
+            <h1 style="font-size: 22px; color: #fff; margin-bottom: 12px; letter-spacing: 1px;">BLOCKCHAIN QUEST ACADEMY</h1>
+            
+            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 6px;">This certifies that</div>
+            <div id="cert-student-name-display" style="font-size: 24px; font-weight: 800; color: #ffd700; text-decoration: underline; margin-bottom: 10px;">Blockchain Explorer</div>
+            
+            <p style="font-size: 12px; color: #cbd5e1; max-width: 520px; margin: 0 auto 16px auto; line-height: 1.5;">
+              has demonstrated comprehensive theoretical and practical mastery of decentralized ledgers, Proof-of-Work thermodynamics, asymmetric digital signatures, P2P consensus networks, adversarial defense, and autonomous smart contract architectures.
+            </p>
+
+            <!-- 6 Mastered Levels Badges -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-width: 540px; margin: 0 auto 16px auto; text-align: left;">
+              <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 9.5px; color: var(--accent-green);">✓ Level 1: Hash Chain Guardian</div>
+              <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 9.5px; color: var(--accent-green);">✓ Level 2: PoW Miner (Bitcoin)</div>
+              <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 9.5px; color: var(--accent-green);">✓ Level 3: Sovereign Wallet</div>
+              <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 9.5px; color: var(--accent-green);">✓ Level 4: P2P Node Operator</div>
+              <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 9.5px; color: var(--accent-green);">✓ Level 5: Security Defender</div>
+              <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; font-size: 9.5px; color: var(--accent-green);">✓ Level 6: DeFi Architect (Uniswap)</div>
+            </div>
+
+            <!-- Footer Details -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px dashed rgba(255,215,0,0.3); padding-top: 12px; margin-top: 8px;">
+              <div style="text-align: left;">
+                <div style="font-size: 9.5px; color: #94a3b8;">Issue Date: <strong id="cert-issue-date" style="color: #fff;"></strong></div>
+                <div style="font-size: 9.5px; color: #94a3b8;">Knowledge Points: <strong id="cert-total-kp" style="color: var(--accent-cyan);"></strong></div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 9px; color: #94a3b8;">Cryptographic Verification Hash:</div>
+                <div id="cert-hash-val" style="font-family: var(--font-mono); font-size: 8.5px; color: #ffd700; word-break: break-all; max-width: 320px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customizer & Actions -->
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <label for="cert-student-name-input" style="font-size: 11px; color: var(--text-muted); white-space: nowrap;">Your Name:</label>
+              <input type="text" id="cert-student-name-input" class="tx-input" value="Blockchain Explorer" style="padding: 4px 8px; font-size: 11px; flex: 1;" />
+            </div>
+            <div style="display: flex; gap: 6px;">
+              <button id="btn-copy-cert-hash" class="hud-btn" style="font-size: 10px; padding: 4px 8px;">📋 Copy Hash</button>
+              <button id="btn-print-certificate" class="hud-btn primary" style="background: #ffd700; color: #000; font-weight: bold; font-size: 10px; padding: 4px 10px;">🖨️ Print / Save PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN ENTRY MODULE -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

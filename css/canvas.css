@@ -1,0 +1,228 @@
+/* ==========================================================================
+   BLOCKCHAIN QUEST - Canvas Viewport & Game World Styles
+   ========================================================================== */
+
+.canvas-viewport {
+  flex: 1;
+  height: 100%;
+  position: relative;
+  background-color: #060910;
+  overflow: hidden;
+  user-select: none;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: grab;
+}
+
+#game-canvas:active {
+  cursor: grabbing;
+}
+
+/* Floating HUD Controls */
+.canvas-hud {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.canvas-hud * {
+  pointer-events: auto;
+}
+
+.top-hud {
+  top: 16px;
+  left: 20px;
+}
+
+.bottom-controls {
+  bottom: 16px;
+  left: 20px;
+  right: 20px;
+  justify-content: space-between;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-pill {
+  background: rgba(11, 17, 30, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hud-pill strong {
+  color: #fff;
+}
+
+.hud-integrity-pill {
+  min-width: 200px;
+  gap: 10px;
+}
+
+.hud-health-track {
+  width: 75px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.hud-health-fill {
+  height: 100%;
+  background: var(--accent-green);
+  border-radius: 6px;
+  transition: width 0.4s ease, background-color 0.4s ease;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.hud-health-fill.warning {
+  background: var(--accent-amber);
+  box-shadow: 0 0 8px rgba(255, 183, 3, 0.5);
+}
+
+.hud-health-fill.critical {
+  background: var(--accent-red);
+  box-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+  animation: pulseHealth 1s infinite alternate;
+}
+
+@keyframes pulseHealth {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+.hud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+}
+
+.hud-dot.pulsing {
+  box-shadow: 0 0 10px var(--accent-cyan);
+  animation: pulseDot 2s infinite;
+}
+
+@keyframes pulseDot {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(0, 240, 255, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 240, 255, 0);
+  }
+}
+
+.hud-btn {
+  background: rgba(18, 28, 48, 0.85);
+  border: 1px solid var(--border-medium);
+  color: var(--text-main);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hud-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-bright);
+  color: var(--accent-cyan);
+  transform: translateY(-1px);
+}
+
+.hud-btn.primary {
+  background: rgba(0, 240, 255, 0.15);
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+.hud-btn.primary:hover {
+  background: var(--accent-cyan);
+  color: #050b14;
+}
+
+/* Canvas Overlay Banner */
+.canvas-overlay-banner {
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  max-width: 480px;
+  background: rgba(11, 17, 30, 0.85);
+  border: 1px solid var(--border-bright);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  z-index: 15;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--accent-cyan-glow);
+  pointer-events: none;
+  animation: fadeInDown 0.4s ease;
+}
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.banner-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.banner-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.banner-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

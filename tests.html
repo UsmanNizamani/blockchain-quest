@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Blockchain Quest - Regression Tests</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+      background: #0d1117;
+      color: #c9d1d9;
+      padding: 2rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .pass { color: #56d364; font-weight: bold; }
+    .fail { color: #f85149; font-weight: bold; }
+    h1 { border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; color: #58a6ff; }
+    h2 { margin-top: 1.5rem; color: #79c0ff; border-bottom: 1px solid #21262d; padding-bottom: 0.3rem; }
+    .test-case { margin: 0.5rem 0; padding: 0.75rem 1rem; border-radius: 6px; background: #161b22; border: 1px solid #30363d; }
+    .summary-box { margin-top: 1.5rem; padding: 1rem; border-radius: 6px; border: 1px solid #30363d; }
+  </style>
+</head>
+<body>
+  <h1>Blockchain Quest - Automated Regression Test Suite</h1>
+  <div id="toast-container" class="toast-container"></div>
+  <div id="results"></div>
+
+  <script type="module">
+    import { playerWallet, NPC_MERCHANTS } from './js/blockchain/Wallet.js';
+    import { nodeNetwork } from './js/blockchain/NodeNetwork.js';
+    import { Level4_Node } from './js/levels/Level4_Node.js';
+    import { eventBus } from './js/core/EventBus.js';
+    import { fiftyOneAttack } from './js/blockchain/FiftyOneAttack.js';
+    import { doubleSpendSim } from './js/blockchain/DoubleSpendSim.js';
+    import { forkSimulator } from './js/blockchain/ForkSimulator.js';
+    import { posThresholdAttack } from './js/blockchain/PosThresholdAttack.js';
+    import { Level5_Defender } from './js/levels/Level5_Defender.js';
+    import { Level7_Merkle, buildMerkleTree, generateMerkleProof, verifyMerkleProof, sha256 } from './js/levels/Level7_Merkle.js';
+    import { Toast } from './js/ui/Toast.js';
+
+    const resultsEl = document.getElementById('results');
+    let passed = 0;
+    let failed = 0;
+
+    function assert(condition, message) {
+      const div = document.createElement('div');
+      div.className = 'test-case';
+      if (condition) {
+        passed++;
+        div.innerHTML = `<span class="pass">✔ PASS:</span> ${message}`;
+        console.log(`✔ PASS: ${message}`);
+      } else {
+        failed++;
+        div.innerHTML = `<span class="fail">✖ FAIL:</span> ${message}`;
+        console.error(`✖ FAIL: ${message}`);
+      }
+      resultsEl.appendChild(div);
+    }
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    async function waitFor(predicate, { timeoutMs = 15000, intervalMs = 50 } = {}) {
+      const start = Date.now();
+      while (Date.now() - start < timeoutMs) {
+        if (predicate()) return true;
+        await sleep(intervalMs);
+      }
+      return false;
+    }
+
+    function addHeader(title) {
+      const h2 = document.createElement('h2');
+      h2.textContent = title;
+      resultsEl.appendChild(h2);
+    }
+
+    // ==========================================
+    // LEVEL 3 REGRESSION TESTS
+    // ==========================================
+    addHeader('Level 3: Wallet sendTransaction & sendCoins');
+
+    function resetWalletGame() {
+      playerWallet.balance = 100.0;
+      playerWallet.nonce = 0;
+      playerWallet.txHistory = [];
+      playerWallet.generateKeypair();
+    }
+
+    resetWalletGame();
+
+    // Test L3-1: method exists
+    assert(typeof playerWallet.sendTransaction === 'function',
+      'Wallet should expose sendTransaction');
+
+    // Test L3-2: object-form call works and returns a signed tx
+    const balBefore = playerWallet.balance;
+    const tx1 = playerWallet.sendTransaction({ to: '0xBob', amount: 1, name: 'Bob' });
+    assert(tx1 && tx1.hash, 'object-form should return tx with hash');
+    assert(tx1.signature, 'object-form tx should be signed');
+    assert(tx1.from === playerWallet.address, 'tx.from should be wallet address');
+    assert(playerWallet.balance === balBefore - 1 - (tx1.gasFee || 0),
+      'balance should decrease by amount + gas');
+
+    // Test L3-3: positional-form call works
+    const balMid = playerWallet.balance;
+    const tx2 = playerWallet.sendTransaction('0xCarol', 2, 'Carol');
+    assert(tx2 && tx2.hash, 'positional-form should return tx with hash');
+    assert(playerWallet.balance === balMid - 2 - (tx2.gasFee || 0),
+      'balance should decrease by amount + gas');
+
+    // Test L3-4: sendCoins alias still works (backward compatibility)
+    const tx3 = playerWallet.sendCoins('0xDave', 1, 'Dave');
+    assert(tx3 && tx3.hash, 'sendCoins alias should still return a signed tx');
+
+    // Test L3-5: insufficient balance rejects
+    const balNow = playerWallet.balance;
+    let threw = false;
+    try { playerWallet.sendTransaction({ to: '0xEve', amount: balNow + 1000 }); }
+    catch (e) { threw = true; }
+    assert(threw, 'insufficient balance should throw or reject');
+
+    // Test L3-6: nonce increments per successful send
+    const nonceBefore = playerWallet.nonce;
+    playerWallet.sendTransaction({ to: '0xFrank', amount: 0.5 });
+    assert(playerWallet.nonce === nonceBefore + 1, 'nonce should increment');
+
+    // ==========================================
+    // LEVEL 4 REGRESSION TESTS
+    // ==========================================
+    addHeader('Level 4: P2P Gossip Mesh & Byzantine Resilience');
+
+    let currentLvl4State = {};
+    let currentTx = null;
+    let lastConsensusSummary = null;
+    let currentScenario = 'VALID';
+    let hungNodeIndex = -1;
+
+    eventBus.on('CONSENSUS_COMPLETED', (summary) => {
+      lastConsensusSummary = summary;
+    });
+
+    function resetLevel4Game() {
+      nodeNetwork.watchdogTimeoutMs = 15000;
+      hungNodeIndex = -1;
+      lastConsensusSummary = null;
+      nodeNetwork.resetAll();
+    }
+
+    function enterLevel4() {
+      const container = document.createElement('div');
+      Level4_Node.initLab(container, (state) => {
+        currentLvl4State = state;
+      });
+    }
+
+    function selectScenario(scenario) {
+      currentScenario = scenario === 'VALID_TX' ? 'VALID' : scenario;
+    }
+
+    function getLevel4Nodes() {
+      return nodeNetwork.nodes;
+    }
+
+    function startBroadcast() {
+      currentTx = {
+        from: playerWallet.address,
+        to: NPC_MERCHANTS[0].address,
+        toName: NPC_MERCHANTS[0].name,
+        amount: currentScenario === 'INSUFFICIENT_FUNDS' ? 9999.0 : 15.0,
+        nonce: currentScenario === 'BAD_NONCE' ? playerWallet.nonce + 99 : playerWallet.nonce,
+        signature: currentScenario === 'FORGED_SIGNATURE' ? '0xDEADBEEF_FORGED_SIGNATURE_BAD_HASH_99999' : '0xVALID_ECDSA_SIG_f0a9bc4389'
+      };
+
+      nodeNetwork.broadcastTransaction(currentTx, currentScenario);
+    }
+
+    function isGossipComplete() {
+      return !nodeNetwork.isBroadcasting && nodeNetwork.nodes.every(n => n.status !== 'checking' && n.status !== 'idle');
+    }
+
+    function hangNode(idx) {
+      hungNodeIndex = idx;
+    }
+
+    async function runLevel4Tests() {
+      resetLevel4Game();
+      enterLevel4();
+      selectScenario('VALID_TX');
+
+      // Test 1: initial state
+      assert(getLevel4Nodes().length === 4, 'should have 4 nodes');
+      assert(getLevel4Nodes().every(n => n.status === 'idle'), 'all idle at start');
+
+      // Test 2: broadcast moves nodes out of idle
+      startBroadcast();
+      await sleep(400);
+      assert(getLevel4Nodes().some(n => n.status === 'checking' || n.status === 'approved' || n.status === 'rejected'),
+        'broadcast should move at least one node out of idle');
+
+      // Test 3: completes within bounded time
+      await waitFor(() => isGossipComplete(), { timeoutMs: 15000 });
+      assert(isGossipComplete(), 'gossip should complete within bounded time');
+
+      // Test 4: all nodes reach terminal state
+      assert(getLevel4Nodes().every(n => ['approved', 'rejected', 'error'].includes(n.status)),
+        'every node must end in a terminal state (approved/rejected/error)');
+
+      // Test 5: consensus event fired
+      assert(lastConsensusSummary !== null, 'CONSENSUS_COMPLETED should fire');
+      assert(lastConsensusSummary.tx === currentTx, 'summary should carry tx');
+
+      // Test 6: mission step advances
+      assert(currentLvl4State.level4Step >= 2, 'level 4 step should advance after gossip');
+
+      // Test 7: forbidden scenario — nodes reject, consensus fails
+      resetLevel4Game();
+      enterLevel4();
+      selectScenario('FORGED_SIGNATURE');
+      startBroadcast();
+      await waitFor(() => isGossipComplete(), { timeoutMs: 15000 });
+      assert(lastConsensusSummary.consensusApproved === false,
+        'forged signature should not reach consensus');
+      assert(getLevel4Nodes().every(n => n.status === 'rejected'),
+        'all nodes should reject forged signature');
+
+      // Test 8: watchdog recovery
+      resetLevel4Game();
+      enterLevel4();
+      selectScenario('VALID_TX');
+      const node0 = nodeNetwork.nodes[0];
+      nodeNetwork.watchdogTimeoutMs = 600; // fast test watchdog
+      startBroadcast();
+      // Keep node0 in checking state
+      setTimeout(() => { node0.status = 'checking'; }, 350);
+      setTimeout(() => { node0.status = 'checking'; }, 450);
+
+      await waitFor(() => lastConsensusSummary && lastConsensusSummary.watchdog === true, { timeoutMs: 3000 });
+      assert(lastConsensusSummary && lastConsensusSummary.watchdog === true, 'watchdog should fire upon hung node');
+      assert(getLevel4Nodes().some(n => n.status === 'error'), 
+        'hung node should transition to error state');
+    }
+
+    // ==========================================
+    // LEVEL 5 REGRESSION TESTS
+    // ==========================================
+    async function runLevel5Tests() {
+      addHeader('Level 5: Defender & Attack Scenarios');
+
+      // Test 1: Subtab Switching
+      const labContainer = document.createElement('div');
+      labContainer.id = 'level5-test-container';
+      document.body.appendChild(labContainer);
+      Level5_Defender.initLab(labContainer);
+
+      assert(typeof window.switchSubTab === 'function', 'Test 1: switchSubTab exposed globally');
+      assert(doubleSpendSim.isActive === true, 'Test 1: initial doubleSpend active');
+
+      window.switchSubTab('attack51');
+      assert(fiftyOneAttack.isActive === true, 'Test 1: attackSim active on attack51 tab');
+      assert(doubleSpendSim.isActive === false, 'Test 1: doubleSpend deactivated on switch away');
+
+      window.switchSubTab('nothing_at_stake');
+      assert(fiftyOneAttack.isActive === false, 'Test 1: attackSim deactivated on switch away');
+
+      window.switchSubTab('long_range');
+
+      window.switchSubTab('forks');
+      assert(forkSimulator.isActive === true, 'Test 1: forkSimulator active on forks tab');
+      assert(document.getElementById('forks-panel') !== null, 'Test 1: forks-panel rendered in container');
+
+      window.switchSubTab('doublespend');
+      assert(doubleSpendSim.isActive === true, 'Test 1: doubleSpend reactivated on switch back');
+      assert(forkSimulator.isActive === false, 'Test 1: forkSimulator deactivated on switch away');
+
+      // Test 2: 51% Attack Progress
+      fiftyOneAttack.reset();
+      fiftyOneAttack.activate();
+      let progressEmitted = false;
+      let progressData = null;
+      const unsubProg = eventBus.on('ATTACK_51_PROGRESS', (data) => {
+        progressEmitted = true;
+        progressData = data;
+      });
+      fiftyOneAttack.startAttack();
+      for (let i = 0; i < 30; i++) {
+        fiftyOneAttack.stepSimulation();
+      }
+      assert(progressEmitted, 'Test 2: ATTACK_51_PROGRESS event emitted');
+      assert(progressData && ('honestHeight' in progressData) && ('attackerHeight' in progressData),
+        'Test 2: progress contains honestHeight and attackerHeight');
+      assert(fiftyOneAttack.reorgHappened === true, 'Test 2: 51% attack completes and triggers reorganization');
+      fiftyOneAttack.stopSimulation();
+      unsubProg();
+
+      // Test 3: Fork Simulator
+      forkSimulator.reset();
+      forkSimulator.triggerFork('soft');
+      assert(forkSimulator.forkMode === 'soft', 'Test 3: Soft fork mode set');
+      forkSimulator.addBlock();
+      assert(forkSimulator.forkA.length > 0 && forkSimulator.forkB.length === 0,
+        'Test 3: Soft fork produces single chain (backward compatible)');
+      assert(forkSimulator.legacyNodes.every(n => n.accepts === 'accept'),
+        'Test 3: Legacy nodes accept tightened soft-fork blocks');
+
+      forkSimulator.reset();
+      forkSimulator.triggerFork('hard');
+      assert(forkSimulator.forkMode === 'hard', 'Test 3: Hard fork mode set');
+      forkSimulator.addBlock();
+      assert(forkSimulator.forkA.length > 0 && forkSimulator.forkB.length > 0,
+        'Test 3: Hard fork produces two distinct chains (ETH / ETC)');
+      assert(forkSimulator.legacyNodes.every(n => n.accepts === 'reject'),
+        'Test 3: Legacy nodes reject hard-fork blocks');
+
+      forkSimulator.reset();
+      assert(forkSimulator.forkA.length === 0 && forkSimulator.forkB.length === 0 && forkSimulator.forkState === 'pre',
+        'Test 3: Reset clears both forks');
+
+      // Test 4: Double-Spend Flow
+      doubleSpendSim.reset();
+      doubleSpendSim.activate();
+      doubleSpendSim.sendTx1();
+      assert(doubleSpendSim.step === 'mempool', 'Test 4: Tx1 moved to mempool');
+      const balAfterTx1 = doubleSpendSim.balance;
+      doubleSpendSim.attemptDoubleSpend();
+      await sleep(450);
+      assert(doubleSpendSim.step === 'rejected', 'Test 4: Tx2 collided with existing nonce and rejected');
+      assert(doubleSpendSim.balance === balAfterTx1, 'Test 4: Balance unchanged after rejected Tx2');
+
+      // Test 5: PoS Threshold Attack
+      posThresholdAttack.reset();
+      posThresholdAttack.setAttackerStakePercent(34);
+      assert(posThresholdAttack.attackerStakePercent === 34, 'Test 5: Attacker stake slider updated');
+      const res34 = posThresholdAttack.executeAttack();
+      assert(res34.info.id === 'liveness_34', 'Test 5: 34% stake causes liveness failure');
+
+      posThresholdAttack.setAttackerStakePercent(67);
+      const res67 = posThresholdAttack.executeAttack();
+      assert(res67.info.id === 'arbitrary_66' && res67.info.canFinalizeArbitrary === true,
+        'Test 5: 67% stake causes arbitrary finality / safety compromise');
+
+      // Test 6: Toast Resilience
+      Toast.show({ message: 'Test error message', type: 'danger' });
+      const toastEl = document.querySelector('.toast.error, .toast-error');
+      assert(toastEl !== null, 'Test 6: Toast.show({message, type: "danger"}) renders with .toast-error class');
+
+      labContainer.remove();
+    }
+
+    async function runLevel7Tests() {
+      addHeader('Level 7: Merkle Trees & State Proofs');
+
+      // Test 1: SHA-256 sanity
+      const h = await sha256("hello");
+      assert(h === "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824", 'Test 1: SHA-256 matches known vector');
+
+      // Test 2: Tree construction (4 leaves)
+      const txs = [
+        { id: 0, from: 'A', to: 'B', amount: 1 },
+        { id: 1, from: 'C', to: 'D', amount: 2 },
+        { id: 2, from: 'E', to: 'F', amount: 3 },
+        { id: 3, from: 'G', to: 'H', amount: 4 }
+      ];
+      const tree = await buildMerkleTree(txs);
+      assert(tree.levels.length === 3, 'Test 2: 4-leaf tree has 3 levels');
+      assert(tree.levels[0].length === 4, 'Test 2: leaf level has 4 nodes');
+      assert(tree.levels[1].length === 2, 'Test 2: mid level has 2 nodes');
+      assert(tree.levels[2].length === 1, 'Test 2: root level has 1 node');
+      assert(tree.root === tree.levels[2][0], 'Test 2: root matches top level');
+
+      // Test 3: Deterministic root
+      const tree2 = await buildMerkleTree(txs);
+      assert(tree.root === tree2.root, 'Test 3: same txs produce identical deterministic root');
+
+      // Test 4: Tampering changes root (avalanche)
+      const txs2 = JSON.parse(JSON.stringify(txs));
+      txs2[1].amount = 999;
+      const tree3 = await buildMerkleTree(txs2);
+      assert(tree3.root !== tree.root, 'Test 4: tampered transaction produces completely different root');
+
+      // Test 5: Valid proof verifies for all leaves
+      for (let i = 0; i < 4; i++) {
+        const proof = generateMerkleProof(tree, i);
+        const ok = await verifyMerkleProof(tree.levels[0][i], proof, tree.root);
+        assert(ok, 'Test 5: valid proof verifies for leaf ' + i);
+      }
+
+      // Test 6: Forged proof fails
+      {
+        const proof = generateMerkleProof(tree, 0);
+        proof[0].hash = 'deadbeef'.repeat(8);
+        const ok = await verifyMerkleProof(tree.levels[0][0], proof, tree.root);
+        assert(!ok, 'Test 6: forged proof fails verification');
+      }
+
+      // Test 7: Odd leaf count (5 txs)
+      const txs5 = txs.concat([{ id: 4, from: 'I', to: 'J', amount: 5 }]);
+      const tree5 = await buildMerkleTree(txs5);
+      for (let i = 0; i < 5; i++) {
+        const proof = generateMerkleProof(tree5, i);
+        const ok = await verifyMerkleProof(tree5.levels[0][i], proof, tree5.root);
+        assert(ok, 'Test 7: valid proof verifies for 5-leaf tree, leaf ' + i);
+      }
+
+      // Test 8: Objectives complete & KP tracking
+      const lab7 = document.createElement('div');
+      lab7.id = 'merkle-lab-container';
+      document.body.appendChild(lab7);
+      let latestLvl7State = {};
+      Level7_Merkle.initLab(lab7, (st) => {
+        latestLvl7State = st;
+      });
+
+      // Trigger obj1: Build tree
+      await window.level7.buildTree();
+      assert(latestLvl7State.hasBuiltMerkleTree === true, 'Test 8: obj1 hasBuiltMerkleTree');
+
+      // Trigger obj2: Tamper Tx
+      await window.level7.tamperTx(1);
+      assert(latestLvl7State.hasWitnessedMerkleAvalanche === true, 'Test 8: obj2 hasWitnessedMerkleAvalanche');
+
+      // Trigger obj3: Verify Proof
+      await window.level7.verifyProof();
+      assert(latestLvl7State.hasVerifiedMerkleProof === true, 'Test 8: obj3 hasVerifiedMerkleProof');
+
+      // Trigger obj4: Reject Forged Proof
+      await window.level7.loadForgedProof();
+      assert(latestLvl7State.hasRejectedForgedProof === true, 'Test 8: obj4 hasRejectedForgedProof');
+
+      // Trigger obj5: Compare Full vs SPV
+      window.level7.setSPVScale(32);
+      assert(latestLvl7State.hasComparedFullVsSPV === true, 'Test 8: obj5 hasComparedFullVsSPV');
+
+      // Total KP check for Level 7 objectives
+      const totalKP = Level7_Merkle.objectives.reduce((sum, obj) => sum + obj.xp, 0);
+      assert(totalKP === 300, 'Test 8: Level 7 awards 300 KP total');
+
+      lab7.remove();
+    }
+
+    async function runAllTests() {
+      await runLevel4Tests();
+      await runLevel5Tests();
+      await runLevel7Tests();
+
+      // Summary
+      const summaryDiv = document.createElement('div');
+      summaryDiv.className = 'summary-box ' + (failed === 0 ? 'pass' : 'fail');
+      summaryDiv.innerHTML = `<h2>Final Result: ${passed} passed, ${failed} failed (${passed}/${passed + failed})</h2>`;
+      resultsEl.appendChild(summaryDiv);
+      console.log(`[test summary] ${passed} passed, ${failed} failed (${passed}/${passed + failed})`);
+    }
+
+    runAllTests();
+  </script>
+</body>
+</html>
