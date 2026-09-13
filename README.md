@@ -4,30 +4,33 @@ An interactive 7-level web game that teaches blockchain fundamentals — hashing
 
 ![Blockchain Quest](screenshots/hero.png)
 
-## 🎮 Play It
+## 🎮 How to Play
 
-### Option 1 — Online (fastest)
-👉 **https://UsmanNizamani.github.io/blockchain-quest/**
+### Step 1 — Install Node.js (one-time setup)
+Download from [https://nodejs.org](https://nodejs.org)  
+Choose the LTS version. Install with all defaults. Done — you never have to touch this again.
 
-### Option 2 — Locally (one-time 30-second setup)
+### Step 2 — Get the game
+**Option A (no git required):**
+1. Click the green **Code** button on this page
+2. Click **Download ZIP**
+3. Extract the ZIP to any folder
 
-**Step 1 — Install Node.js (one time only)**  
-Download the LTS version from [https://nodejs.org](https://nodejs.org) and install with all defaults. That's it — you never have to touch Node.js again.
-
-**Step 2 — Get the game**  
-Click the green **Code** button above → **Download ZIP** → extract the folder.  
-Or if you use git:
+**Option B (if you use git):**
 ```bash
 git clone https://github.com/UsmanNizamani/blockchain-quest.git
 cd blockchain-quest
 ```
 
-**Step 3 — Launch**
-- **Windows:** double-click `Launch Game.bat`
-- **macOS:** double-click `Launch Game.command`
-- **Linux:** run `./Launch Game.sh` in a terminal
+### Step 3 — Launch
+- **Windows:** Double-click `Launch Game.bat`
+- **macOS:** Double-click `Launch Game.command`
+- **Linux:** Double-click `Launch Game.sh` (or run `./Launch Game.sh` in a terminal)
 
-The game opens automatically in your browser at [http://localhost:3000](http://localhost:3000).
+A window opens, the game opens automatically in your browser at [http://localhost:3000](http://localhost:3000), and you're playing.
+
+### Step 4 — To stop the game
+Close the terminal window (Windows) or press Ctrl+C (macOS/Linux). The server stops.
 
 ---
 
@@ -45,12 +48,14 @@ The game opens automatically in your browser at [http://localhost:3000](http://l
 
 ---
 
-## 🖥️ System Requirements
+## 🖥️ Requirements
 
-- **Node.js 16 or newer** (Download: [https://nodejs.org](https://nodejs.org))
+- **Node.js 16 or newer** (one-time install, ~30 seconds)  
+  Download: [https://nodejs.org](https://nodejs.org)
 - **Any modern browser:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
-- **~10 MB of disk space** (plus Node.js runtime if not already installed)
-- **Zero external dependencies:** No Python, no Docker, no database, no npm package installation required.
+- **~10 MB disk space**
+
+That's it. No Python, no Docker, no database. Zero external dependencies.
 
 ---
 
@@ -65,7 +70,8 @@ blockchain-quest/
 ├── Launch Game.bat         # Windows one-click launcher
 ├── Launch Game.command     # macOS launcher
 ├── Launch Game.sh          # Linux launcher
-├── pages.md                # GitHub Pages deployment guide
+├── START_HERE.txt          # Plain-text quick start guide
+├── TROUBLESHOOTING.md      # Comprehensive issue resolution guide
 ├── LICENSE                 # MIT License
 ├── css/                    # Modular stylesheets (main, canvas, sidebar)
 ├── js/                     # Game source
@@ -101,21 +107,57 @@ node server.js
 
 ## 🐛 Troubleshooting
 
-- **"Node.js not found" when running the launcher:**  
-  Install Node.js from [https://nodejs.org](https://nodejs.org) (LTS version), then close and re-open the launcher.
-- **Port 3000 already in use:**  
-  The launcher attempts to free port 3000 automatically. If it still fails:
-  - **Windows:** `netstat -ano | findstr :3000` then `taskkill /PID <pid> /F`
-  - **macOS / Linux:** `lsof -ti:3000 | xargs kill -9`
-  - Or edit `server.js` and set `PORT = 3001`.
-- **Browser shows "Cannot reach this site":**  
-  The server may have encountered an error during startup. Inspect the minimized "Blockchain Quest Server" window for error details.
-- **Windows SmartScreen warning on `.bat` file:**  
-  Click **"More info"** → **"Run anyway"**. The `.bat` script is a plain-text batch file that launches the local server; you can inspect its contents in any text editor.
-- **Antivirus flags the launcher:**  
-  Some antivirus heuristics flag `.bat` files with taskkill commands. The launcher is safe and open source; add an exception in your antivirus settings if needed.
-- **Progress is not saved:**  
-  The game saves progress locally via browser `localStorage`. Verify cookies and storage are enabled, and avoid private/incognito browsing mode if you want progress to persist across sessions.
+For detailed walkthroughs and diagnostic steps, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+### "Node.js is not recognized" / "node: command not found"
+Node.js is not installed, or your terminal can't find it. Two fixes:
+1. Install from [https://nodejs.org](https://nodejs.org) (LTS version), then reopen the launcher.
+2. On Windows, make sure "Add to PATH" was checked during Node install (it is by default).
+
+### "Port 3000 is already in use"
+Another program is using port 3000, OR a previous Blockchain Quest server is still running.
+
+**Fix (Windows):**
+1. Open Command Prompt
+2. Run: `netstat -ano | findstr :3000`
+3. Note the PID (last column)
+4. Run: `taskkill /PID <PID> /F`
+
+**Fix (macOS/Linux):**  
+Run: `lsof -ti:3000 | xargs kill -9`
+
+Or simply restart your computer. The port will be free.
+
+### The browser opens but shows "Cannot reach this site"
+The server didn't start in time, or crashed. Look at the terminal window for red error text. Common causes:
+- Node.js not installed → see first item
+- Port 3000 blocked → see second item
+- Corrupted download → re-download the ZIP
+
+### The browser never opens automatically
+Manually open your browser and go to: [http://localhost:3000](http://localhost:3000)
+
+### Windows SmartScreen warning on the .bat file
+Click **More info** → **Run anyway**. The `.bat` file only starts a local server on your machine; you can inspect it in any text editor.
+
+### Antivirus flags the launcher
+Some antivirus tools flag `.bat` files that run taskkill. The launcher is safe and open source. Inspect it if you're unsure — it's 40 lines of plain text.
+
+### Progress isn't saved
+The game saves progress in browser `localStorage`. Make sure:
+- You're not using private/incognito mode
+- `localStorage` is enabled in your browser settings
+- You're accessing the game at `http://localhost:3000` (not a `file://` URL)
+
+### I want to run it without the launcher
+Open a terminal in the project folder and run:
+```bash
+node server.js
+```
+Then open [http://localhost:3000](http://localhost:3000).
+
+### The game loads but nothing is playable
+You may have opened `index.html` directly by double-clicking it. This does NOT work — the game needs to be served by the local Node server. Always launch via the launcher script (or `node server.js`).
 
 ---
 

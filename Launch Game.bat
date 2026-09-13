@@ -34,9 +34,10 @@ for /f "tokens=5" %%a in ('netstat -ano 2^>nul ^| findstr ":3000 "') do (
 )
 ping 127.0.0.1 -n 2 >nul
 
-:: 3. Start server in background (minimized)
+:: 3. Clean previous log and start server in background (minimized)
+if exist .server.log del /f /q .server.log >nul 2>&1
 echo ^> Starting server at http://localhost:3000 ...
-start "Blockchain Quest Server" /MIN cmd /c "node server.js"
+start "Blockchain Quest Server" /MIN cmd /c "node server.js > .server.log 2>&1"
 
 :: 4. Poll until the server responds (max 10 seconds)
 echo ^> Waiting for server to be ready...
@@ -64,8 +65,18 @@ if !READY!==1 (
     pause
 ) else (
     color 0C
+    echo.
     echo [ERROR] Server did not start within 10 seconds.
-    echo Check the "Blockchain Quest Server" window for errors.
+    if exist .server.log (
+        echo.
+        echo ---------------- Server Output Log ----------------
+        type .server.log
+        echo ---------------------------------------------------
+    )
+    echo.
+    echo To diagnose and run manually, open Command Prompt and execute:
+    echo   cd /d "%~dp0" ^&^& node server.js
+    echo.
     pause
     exit /b 1
 )
